@@ -1,0 +1,48 @@
+ cw1
+
+ Timestamp is 5e525222 (Sun Feb 23 11:21:22 2020)
+
+ Preferred load address is 00400000
+
+ Start         Length     Name                   Class
+ 0001:00000000 000001eaH .text                   CODE
+ 0002:00000000 00000024H .idata$5                DATA
+ 0002:00000024 00000028H .idata$2                DATA
+ 0002:0000004c 00000014H .idata$3                DATA
+ 0002:00000060 00000024H .idata$4                DATA
+ 0002:00000084 0000007eH .idata$6                DATA
+ 0002:00000102 00000000H .edata                  DATA
+ 0003:00000000 00000110H .data                   DATA
+
+  Address         Publics by Value              Rva+Base     Lib:Object
+
+ 0001:00000000       _start                     00401000 f   cw1.obj
+ 0001:00000129       _ScanInt                   00401129 f   cw1.obj
+ 0001:000001c0       _CharToOemA@8              004011c0 f   user32:user32.dll
+ 0001:000001c6       _wsprintfA                 004011c6 f   user32:user32.dll
+ 0001:000001cc       _GetStdHandle@4            004011cc f   kernel32:kernel32.dll
+ 0001:000001d2       _ReadConsoleA@20           004011d2 f   kernel32:kernel32.dll
+ 0001:000001d8       _WriteConsoleA@20          004011d8 f   kernel32:kernel32.dll
+ 0001:000001de       _ExitProcess@4             004011de f   kernel32:kernel32.dll
+ 0001:000001e4       _lstrlenA@4                004011e4 f   kernel32:kernel32.dll
+ 0002:00000000       __imp__ReadConsoleA@20     00402000     kernel32:kernel32.dll
+ 0002:00000004       __imp__lstrlenA@4          00402004     kernel32:kernel32.dll
+ 0002:00000008       __imp__ExitProcess@4       00402008     kernel32:kernel32.dll
+ 0002:0000000c       __imp__GetStdHandle@4      0040200c     kernel32:kernel32.dll
+ 0002:00000010       __imp__WriteConsoleA@20    00402010     kernel32:kernel32.dll
+ 0002:00000014       \177kernel32_NULL_THUNK_DATA 00402014     kernel32:kernel32.dll
+ 0002:00000018       __imp__wsprintfA           00402018     user32:user32.dll
+ 0002:0000001c       __imp__CharToOemA@8        0040201c     user32:user32.dll
+ 0002:00000020       \177user32_NULL_THUNK_DATA 00402020     user32:user32.dll
+ 0002:00000024       __IMPORT_DESCRIPTOR_user32 00402024     user32:user32.dll
+ 0002:00000038       __IMPORT_DESCRIPTOR_kernel32 00402038     kernel32:kernel32.dll
+ 0002:0000004c       __NULL_IMPORT_DESCRIPTOR   0040204c     user32:user32.dll
+
+ entry point at        0001:00000000
+
+ Static symbols
+
+ 0001:00000000       _$$$00001@0                00401000 f   cw1.obj
+ 0001:00000157       pocz                       00401157 f   cw1.obj
+ 0001:000001a7       nast                       004011a7 f   cw1.obj
+ 0001:000001ad       et4                        004011ad f   cw1.obj

@@ -1,0 +1,1 @@
+.\BIN\link /SUBSYSTEM:CONSOLE /LIBPATH:.\LIB /OUT:.\%1\%1.exe /MAP:.\%1\%1.map /PDB:.\%1\%1.pdb .\%1\%1.obj

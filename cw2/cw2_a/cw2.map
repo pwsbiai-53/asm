@@ -1,0 +1,44 @@
+ cw2
+
+ Timestamp is 5e5b7e2f (Sun Mar 01 10:19:43 2020)
+
+ Preferred load address is 00400000
+
+ Start         Length     Name                   Class
+ 0001:00000000 000001b0H .text                   CODE
+ 0002:00000000 0000001cH .idata$5                DATA
+ 0002:0000001c 00000028H .idata$2                DATA
+ 0002:00000044 00000014H .idata$3                DATA
+ 0002:00000058 0000001cH .idata$4                DATA
+ 0002:00000074 00000062H .idata$6                DATA
+ 0002:000000d6 00000000H .edata                  DATA
+ 0003:00000000 000000a7H .data                   DATA
+
+  Address         Publics by Value              Rva+Base     Lib:Object
+
+ 0001:00000000       _start                     00401000 f   cw2.obj
+ 0001:00000118       _ScanInt@0                 00401118 f   cw2.obj
+ 0001:00000192       _CharToOemA@8              00401192 f   user32:user32.dll
+ 0001:00000198       _GetStdHandle@4            00401198 f   kernel32:kernel32.dll
+ 0001:0000019e       _WriteConsoleA@20          0040119e f   kernel32:kernel32.dll
+ 0001:000001a4       _ExitProcess@4             004011a4 f   kernel32:kernel32.dll
+ 0001:000001aa       _lstrlenA@4                004011aa f   kernel32:kernel32.dll
+ 0002:00000000       __imp__lstrlenA@4          00402000     kernel32:kernel32.dll
+ 0002:00000004       __imp__GetStdHandle@4      00402004     kernel32:kernel32.dll
+ 0002:00000008       __imp__WriteConsoleA@20    00402008     kernel32:kernel32.dll
+ 0002:0000000c       __imp__ExitProcess@4       0040200c     kernel32:kernel32.dll
+ 0002:00000010       \177kernel32_NULL_THUNK_DATA 00402010     kernel32:kernel32.dll
+ 0002:00000014       __imp__CharToOemA@8        00402014     user32:user32.dll
+ 0002:00000018       \177user32_NULL_THUNK_DATA 00402018     user32:user32.dll
+ 0002:0000001c       __IMPORT_DESCRIPTOR_user32 0040201c     user32:user32.dll
+ 0002:00000030       __IMPORT_DESCRIPTOR_kernel32 00402030     kernel32:kernel32.dll
+ 0002:00000044       __NULL_IMPORT_DESCRIPTOR   00402044     user32:user32.dll
+
+ entry point at        0001:00000000
+
+ Static symbols
+
+ 0001:00000000       _$$$00001@0                00401000 f   cw2.obj
+ 0001:00000136       pocz                       00401136 f   cw2.obj
+ 0001:0000017f       nast                       0040117f f   cw2.obj
+ 0001:00000188       et4                        00401188 f   cw2.obj

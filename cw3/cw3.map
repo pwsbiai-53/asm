@@ -1,0 +1,38 @@
+ cw3
+
+ Timestamp is 5e7514d9 (Fri Mar 20 20:09:13 2020)
+
+ Preferred load address is 00400000
+
+ Start         Length     Name                   Class
+ 0001:00000000 0000035eH .text                   CODE
+ 0002:00000000 00000018H .idata$5                DATA
+ 0002:00000018 00000028H .idata$2                DATA
+ 0002:00000040 00000014H .idata$3                DATA
+ 0002:00000054 00000018H .idata$4                DATA
+ 0002:0000006c 00000056H .idata$6                DATA
+ 0002:000000c2 00000000H .edata                  DATA
+ 0003:00000000 000000f5H .data                   DATA
+
+  Address         Publics by Value              Rva+Base     Lib:Object
+
+ 0001:00000000       _start                     00401000 f   cw3.obj
+ 0001:00000346       _CharToOemA@8              00401346 f   user32:user32.dll
+ 0001:0000034c       _GetStdHandle@4            0040134c f   kernel32:kernel32.dll
+ 0001:00000352       _WriteConsoleA@20          00401352 f   kernel32:kernel32.dll
+ 0001:00000358       _ExitProcess@4             00401358 f   kernel32:kernel32.dll
+ 0002:00000000       __imp__ExitProcess@4       00402000     kernel32:kernel32.dll
+ 0002:00000004       __imp__GetStdHandle@4      00402004     kernel32:kernel32.dll
+ 0002:00000008       __imp__WriteConsoleA@20    00402008     kernel32:kernel32.dll
+ 0002:0000000c       \177kernel32_NULL_THUNK_DATA 0040200c     kernel32:kernel32.dll
+ 0002:00000010       __imp__CharToOemA@8        00402010     user32:user32.dll
+ 0002:00000014       \177user32_NULL_THUNK_DATA 00402014     user32:user32.dll
+ 0002:00000018       __IMPORT_DESCRIPTOR_user32 00402018     user32:user32.dll
+ 0002:0000002c       __IMPORT_DESCRIPTOR_kernel32 0040202c     kernel32:kernel32.dll
+ 0002:00000040       __NULL_IMPORT_DESCRIPTOR   00402040     user32:user32.dll
+
+ entry point at        0001:00000000
+
+ Static symbols
+
+ 0001:00000000       _$$$00001@0                00401000 f   cw3.obj

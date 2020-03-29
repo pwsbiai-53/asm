@@ -1,0 +1,465 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
+.\cw4\cw4.asm						     Page 1 - 1
+
+
+				;CW4 c :  Przesuwanie i rotacja bitów
+				.586P
+				.MODEL flat, STDCALL
+				option casemap :none
+				;--- stale z pliku .\include\windows.inc ---
+ =-0000000A			STD_INPUT_HANDLE equ -10
+ =-0000000B			STD_OUTPUT_HANDLE equ -11
+				;--- funkcje API Win32 z pliku .\include\user32.inc ---
+				CharToOemA PROTO :DWORD,:DWORD
+				;--- funkcje API Win32 z pliku .\include\kernel32.inc ---
+				GetStdHandle PROTO :DWORD
+				ReadConsoleA PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+				WriteConsoleA PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+				ExitProcess PROTO :DWORD
+				wsprintfA PROTO C :VARARG
+				lstrlenA PROTO :DWORD
+				;--- podprogramy ----
+				ScanInt PROTO C adres:DWORD
+				ScanBin PROTO STDCALL adres:DWORD
+				DrukBin PROTO STDCALL liczba:DWORD
+				DrukShortBin PROTO STDCALL liczba:DWORD
+				;--- funkcje
+				;-------------
+				includelib .\lib\user32.lib
+				includelib .\lib\kernel32.lib
+				;-------------
+ 00000000			_DATA SEGMENT
+ 00000000 00000000		hout DD ?
+ 00000004 00000000		hinp DD ?
+ 00000008 41 75 74 6F 72	naglow DB "Autor aplikacji Grzegorz Makowski.",0Dh,0Ah,0
+	   20 61 70 6C 69
+	   6B 61 63 6A 69
+	   20 47 72 7A 65
+	   67 6F 72 7A 20
+	   4D 61 6B 6F 77
+	   73 6B 69 2E 0D
+	   0A 00
+ 0000002D 00000025		rozmN DD $ - naglow
+ 00000031 0D 0A 00		newline DB 0Dh,0Ah,0
+				ALIGN 4
+ 00000034 0D 0A 4C 69 63	naglrot DB 0Dh,0Ah,"Liczba binarna przed rotacja: ",0
+	   7A 62 61 20 62
+	   69 6E 61 72 6E
+	   61 20 70 72 7A
+	   65 64 20 72 6F
+	   74 61 63 6A 61
+	   3A 20 00
+ 00000055 0D 0A 43 79 6B	poarot DB 0Dh,0Ah,"Cyklicznie przez znacznik CF 4 w prawo razy: ",0
+	   6C 69 63 7A 6E
+	   69 65 20 70 72
+	   7A 65 7A 20 7A
+	   6E 61 63 7A 6E
+	   69 6B 20 43 46
+	   20 34 20 77 20
+	   70 72 61 77 6F
+	   20 72 61 7A 79
+	   3A 20 00
+ 00000085 0D 0A 57 20 6C	ponrot DB 0Dh,0Ah,"W lewo 2 razy: ",0
+	   65 77 6F 20 32
+	   20 72 61 7A 79
+	   3A 20 00
+				align 4
+ 00000098 00000000		rout DD 0 ;faktyczna ilosc wyprowadzonych znaków
+ 0000009C 00000000		rinp DD 0 ;faktyczna ilosc wprowadzonych znaków
+ 000000A0 00000000		rinp2 DD 0 ;faktyczna ilosc wprowadzonych znaków
+ 000000A4  00000080 [		bufor DB 128 dup(?)
+	    00
+	   ]
+ 00000124 00000080		rbuf DD 128
+ 00000128 00000000		zmY DD 0
+ 0000012C A638783E		st0 DD 10100110001110000111100000111110b
+
+ 00000130 44 7A 69 EA 6B	tekstZakoncz DB "Dziêkujê za uwagê! PWSBiA@2020",0                  ; nag³ówek
+	   75 6A EA 20 7A
+	   61 20 75 77 61
+	   67 EA 21 20 50
+	   57 53 42 69 41
+	   40 32 30 32 30
+	   00
+ 0000014F 0000001F		rozmZ DD $ - tekstZakoncz
+ 00000153			_DATA ENDS
+				;------------
+ 00000000			_DATA? SEGMENT
+ 00000000 00000000		rbin dd ? ;ilosc znaków liczby binarnej
+ 00000004 00000000		rrot dd ? ;ilosc znaków poszczególnych naglównków przy rotacji
+ 00000008			_DATA? ENDS
+ 00000000			_TEXT SEGMENT
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 00000000			start:
+ 00000000			;--- wywolanie funkcji GetStdHandle
+ 00000000  6A F5		push STD_OUTPUT_HANDLE
+ 00000002  E8 00000000 E	call GetStdHandle ; wywolanie funkcji GetStdHandle
+ 00000007  A3 00000000 R	mov hout, EAX ; deskryptor wyjsciowego bufora konsoli
+ 0000000C  6A F6		push STD_INPUT_HANDLE
+ 0000000E  E8 00000000 E	call GetStdHandle ; wywolanie funkcji GetStdHandle
+ 00000013  A3 00000004 R	mov hinp, EAX ; deskryptor wejsciowego bufora konsoli
+				;--- naglówek ---------
+ 00000018  68 00000008 R	push OFFSET naglow
+ 0000001D  68 00000008 R	push OFFSET naglow
+ 00000022  E8 00000000 E	call CharToOemA ; konwersja polskich znaków
+				;--- wyswietlenie ---------
+ 00000027  6A 00		push 0 ; rezerwa, musi byc zero
+ 00000029  68 00000098 R	push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znaków
+ 0000002E  FF 35 0000002D R	push rozmN ; ilosc znaków
+ 00000034  68 00000008 R	push OFFSET naglow ; wskaznik na tekst
+ 00000039  FF 35 00000000 R	push hout ; deskryptor buforu konsoli
+ 0000003F  E8 00000000 E	call WriteConsoleA ; wywolanie funkcji WriteConsoleA
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				invoke CharToOemA, offset naglrot, offset bufor ; konwersja polskich znaków
+				; liczymy dlugosc stringu do wyswietlenia
+				invoke lstrlenA, offset bufor
+ 0000005D  A3 00000004 R	mov rrot, eax
+				; wyswietlamy powitanie
+				invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
+				; i wyswietlamy nasz ciag binarny
+				invoke DrukBin, st0
+				invoke CharToOemA, offset poarot, offset bufor ; konwersja polskich znaków
+				; liczymy dlugosc stringu do wyswietlenia
+				invoke lstrlenA, offset bufor
+ 000000A3  A3 00000004 R	mov rrot, eax
+				; wyswietlamy powiadomienia o rotacji
+				invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
+ 000000C5  A1 0000012C R	mov eax, st0 ; kopiujemy nasz ciag bitów do akumulatora
+ 000000CA  C1 E8 04		shr eax, 4 ; przesuwamy go w prawo o 4 pozycje
+ 000000CD  A3 0000012C R	mov st0, eax ; i kopiujemy spowrotem do zmiennej st0 i wyswietlamy ciag binarny
+				invoke DrukBin, st0
+				invoke CharToOemA, offset ponrot, offset bufor ; konwersja polskich znaków
+				; liczymy dlugosc stringu do wyswietlenia
+				invoke lstrlenA, offset bufor
+ 000000F6  A3 00000004 R	mov rrot, eax
+				; wyswietlamy powiadomienia o rotacji
+				invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
+ 00000118  A1 0000012C R	mov eax, st0 ; kopiujemy nasz ciag bitów do akumulatora
+ 0000011D  C1 C0 02		rol eax, 2 ; przesuwamy go w lewo o 2 pozycje
+ 00000120  A3 0000012C R	mov st0, eax ; i kopiujemy spowrotem do zmiennej st0
+				; i wyswietlamy nasz ciag binarny
+				invoke DrukBin, st0
+				;--- wyœwietlenie now¹ linii ---
+ 00000130  6A 00		push	0		      	; rezerwa, musi byæ zero
+ 00000132  68 00000098 R	push	OFFSET rout 	; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000137  6A 02		push	2		      	; iloœæ znaków
+ 00000139  68 00000031 R	push	OFFSET newline 	; wska¿nik na tekst
+ 0000013E  FF 35 00000000 R	push	hout		    ; deskryptor buforu konsoli
+ 00000144  E8 00000000 E	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				;--- wyœwietlenie zakonczenia ---
+ 00000149  6A 00		push 0                  ; rezerwa, musi byæ zero
+ 0000014B  68 00000098 R	push OFFSET rout        ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000150  FF 35 0000014F R	push rozmZ  
+ 00000156  68 00000130 R	push OFFSET tekstZakoncz
+ 0000015B  68 00000130 R	push OFFSET tekstZakoncz
+ 00000160  E8 00000000 E	call CharToOemA
+ 00000165  6A 00		push 0                          ; rezerwa, musi byæ zero
+ 00000167  68 00000098 R	push OFFSET rout                ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000016C  FF 35 0000014F R	push rozmZ                      ; iloœæ znaków
+ 00000172  68 00000130 R	push OFFSET tekstZakoncz        ; wska¿nik na tekst
+ 00000177  FF 35 00000000 R	push hout                       ; deskryptor buforu konsoli
+ 0000017D  E8 00000000 E	call WriteConsoleA              ; wywo³anie funkcji WriteConsole
+				;--- zakonczenie procesu ---------
+ 00000182  6A 00		push 0
+ 00000184  E8 00000000 E	call ExitProcess ; wywolanie funkcji ExitProcess
+ 00000189 00000189		ScanInt PROC C adres
+				;; funkcja ScanInt przeksztalca ciag cyfr do liczby, która jest zwracana przez EAX
+				;; argument - zakonczony zerem wiersz z cyframi
+				;; rejestry: EBX - adres wiersza, EDX - znak liczby, ESI - indeks cyfry w wierszu, EDI - tymcza-sowy
+				;--- poczatek funkcji
+				;--- odkladanie na stos
+ 0000018C  53			push EBX
+ 0000018D  51			push ECX
+ 0000018E  52			push EDX
+ 0000018F  56			push ESI
+ 00000190  57			push EDI
+				;--- przygotowywanie cyklu
+				INVOKE lstrlenA, adres
+ 00000199  8B F8		mov EDI, EAX ;ilosc znaków
+ 0000019B  8B C8		mov ECX, EAX ;ilosc powtórzen = ilosc znaków
+ 0000019D  33 F6		xor ESI, ESI ; wyzerowanie ESI
+ 0000019F  33 D2		xor EDX, EDX ; wyzerowanie EDX
+ 000001A1  33 C0		xor EAX, EAX ; wyzerowanie EAX
+ 000001A3  8B 5D 08		mov EBX, adres
+				;--- cykl --------------------------
+ 000001A6  80 3C 1E 2D		pocz: cmp BYTE PTR [EBX+ESI], 02Dh ;porównanie z kodem '-'
+ 000001AA  75 07		jne @F
+ 000001AC  BA 00000001		mov EDX, 1
+ 000001B1  EB 24		jmp nast
+ 000001B3  80 3C 1E 30		@@: cmp BYTE PTR [EBX+ESI], 030h ;porównanie z kodem '0'
+ 000001B7  73 02		jae @F
+ 000001B9  EB 1C		jmp nast
+ 000001BB  80 3C 1E 39		@@: cmp BYTE PTR [EBX+ESI], 039h ;porównanie z kodem '9'
+ 000001BF  76 02		jbe @F
+ 000001C1  EB 14		jmp nast
+				;----
+ 000001C3  52			@@: push EDX ; do EDX procesor moze zapisac wynik mnozenia
+ 000001C4  BF 0000000A		mov EDI, 10
+ 000001C9  F7 E7		mul EDI ;mnozenie EAX * EDI
+ 000001CB  8B F8		mov EDI, EAX ; tymczasowo z EAX do EDI
+ 000001CD  33 C0		xor EAX, EAX ;zerowani EAX
+ 000001CF  8A 04 1E		mov AL, BYTE PTR [EBX+ESI]
+ 000001D2  2C 30		sub AL, 030h ; korekta: cyfra = kod znaku - kod '0'
+ 000001D4  03 C7		add EAX, EDI ; dodanie cyfry
+ 000001D6  5A			pop EDX
+ 000001D7  46			nast: inc ESI
+ 000001D8  49			dec ECX
+ 000001D9  74 02		jz @F
+ 000001DB  EB C9		jmp pocz
+				;--- wynik
+ 000001DD  0B D2		@@: or EDX, EDX ;analiza znacznika EDX
+ 000001DF  74 02		jz @F
+ 000001E1  F7 D8		neg EAX
+ 000001E3			@@:
+				;--- zdejmowanie ze stosu
+ 000001E3  5F			pop EDI
+ 000001E4  5E			pop ESI
+ 000001E5  5A			pop EDX
+ 000001E6  59			pop ECX
+ 000001E7  5B			pop EBX
+				;--- powrót
+				ret
+ 000001EA			ScanInt ENDP
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 000001EA			ScanBin PROC STDCALL adres:DWORD
+				;; funkcja ScanBin przeksztalca ciag cyfr do liczby, która jest zwracana przez EAX
+				;; argument - zakonczony zerem wiersz z cyframi binarnymi '0' badz '1'
+				;; rejestry: EBX - adres wiersza, ESI - indeks cyfry w wierszu, EDI - tymczasowy
+				;--- poczatek funkcji
+				;--- odkladanie na stos
+ 000001ED  53			push ebx
+ 000001EE  51			push ecx
+ 000001EF  52			push edx ; podczas mnozenia moze sie zdazyc ze EDX zostanie zmodyfikowane
+ 000001F0  56			push esi
+ 000001F1  57			push edi
+				;--- przygotowanie cyklu
+				invoke lstrlenA, adres
+ 000001FA  8B C8		mov ecx, eax ; ilosc powtórzen = ilosc znaków
+ 000001FC  8B 5D 08		mov ebx, adres ; do rejetru EBX przenosimy adres ciagu cyfr
+ 000001FF  33 F6		xor esi, esi ; zerujemy numer kolejnych cyfr w tablicy
+ 00000201  33 FF		xor edi, edi ; zerujemy rejestr tymczasowy
+ 00000203  33 C0		xor eax, eax ; zerujemy akumulator
+				;--- cykl --------------------
+ 00000205			pocz:
+ 00000205  80 3C 1E 30		cmp byte ptr[ebx + esi], '0' ; porównujemy znak z bufora z znakiem '0'
+ 00000209  73 02		jae @F ; jesli jest wiekszy badz równy to dobrze, przechodzimy do kolejnej etykiety.
+ 0000020B  EB 1A		jmp nast ; jesli jest mniejszy to oznacza iz jest to niepoprawny znak,
+				; przechodzimy do nastepnego znaku.
+ 0000020D			@@:
+ 0000020D  80 3C 1E 31		cmp byte ptr[ebx + esi], '1' ; porównujemy znak z bufora z kodem znaku '1'
+ 00000211  76 02		jbe @F ; jesli jest mniejszy badz równy to dobrze i przechodzimy do kolejnej etykiety
+ 00000213  EB 12		jmp nast ; jesli jest wiekszy to jest to niepoprawny znak i przechodzimy do nastep-nego zna-ku.
+ 00000215			@@:
+ 00000215  BF 00000002		mov edi, 2 ; do rejestru edi wstawiamy 2
+ 0000021A  F7 E7		mul edi ; przy kazdym przejsciu petli mnozymy eax przez 2 aby przesunac poprzedni wynik w lewo
+ 0000021C  8B F8		mov edi, eax ; czasowo nasza cyfre przenosimy do rejestru edi
+ 0000021E  33 C0		xor eax, eax ; i zerujemy akumulator
+ 00000220  8A 04 1E		mov al, byte ptr[ebx + esi] ; do akumulatora przenosimy bajt naszego znaku '0' badz '1'
+ 00000223  2C 30		sub al, '0' ; odejmujemy kod znaku '0' aby uzyskac cyfre 1 badz 0
+ 00000225  03 C7		add eax, edi ; i dodajemy to do zapisanej liczby
+ 00000227			nast: ; przechodzenie do nastepnej pozycji polega na:
+ 00000227  46			inc esi ; zwiekszeniu indeksu cyfry aby przejsc na kolejny znak
+ 00000228  49			dec ecx ; zmniejszeniu kiczby znaków do przejscia o 1
+ 00000229  74 02		jz @F ; jesli ilosc znaków do przejscia wynosi 0 to przechodzimy do kolejnej etykiety
+ 0000022B  EB D8		jmp pocz ; jesli jeszcze mamy znaki do przejscia to zaczynamy wykonywac od po-czatku wszystko,
+				; tylko tym razem na kolejnym znaku
+ 0000022D			@@:
+				;--- zdejmowanie ze stosu
+ 0000022D  5F			pop edi
+ 0000022E  5E			pop esi
+ 0000022F  5A			pop edx
+ 00000230  59			pop ecx
+ 00000231  5B			pop ebx
+				;--- powrót
+				ret 4 ; poniewaz funkcja uzywa konwencji STDCALL wiec sprzatamy po sobie na stosie
+ 00000233  C2 0004		; odejmujac od esp 4
+				ScanBin ENDP
+ 00000236			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				DrukBin PROC STDCALL liczba:DWORD
+ 00000236			;; funkcja DrukBin wyswietla liczbe-argument w postaci binarnej
+				;; rejestry: ECX - cykl, EDI - maska, ESI - indeks w buforze, EBX - przesuniecie bufo-ra
+				;--- odkladanie na stos
+				push ECX
+ 00000239  51			push EDI
+ 0000023A  57			push ESI
+ 0000023B  56			push EBX
+ 0000023C  53			;---
+				mov ECX,32
+ 0000023D  B9 00000020		mov EDI,80000000h
+ 00000242  BF 80000000		mov ESI,0
+ 00000247  BE 00000000		mov EBX,OFFSET bufor
+ 0000024C  BB 000000A4 R	@@d1:
+ 00000251			mov BYTE PTR [EBX+ESI],'0'
+ 00000251  C6 04 1E 30		test liczba,EDI
+ 00000255  85 7D 08		jz @@d2
+ 00000258  74 03		inc BYTE PTR [EBX+ESI]
+ 0000025A  FE 04 1E		@@d2:
+ 0000025D			shr EDI,1
+ 0000025D  D1 EF		inc ESI
+ 0000025F  46			loopnz @@d1
+ 00000260  E0 EF		mov BYTE PTR [EBX+32],0Dh
+ 00000262  C6 43 20 0D		mov BYTE PTR [EBX+33],0Ah
+ 00000266  C6 43 21 0A		;--- wyswietlenie wynika ---------
+				push 0 ; rezerwa, musi byc zero
+ 0000026A  6A 00		push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znaków
+ 0000026C  68 00000098 R	push 34 ; ilosc znaków
+ 00000271  6A 22		push OFFSET bufor ; wskaznik na tekst w buforze
+ 00000273  68 000000A4 R	push hout ; deskryptor buforu konsoli
+ 00000278  FF 35 00000000 R	call WriteConsoleA ; wywolanie funkcji WriteConsoleA
+ 0000027E  E8 00000000 E	;--- zdejmowanie ze stosu
+				pop EBX
+ 00000283  5B			pop ESI
+ 00000284  5E			pop EDI
+ 00000285  5F			pop ECX
+ 00000286  59			;--- powrót
+				ret 4
+				DrukBin ENDP
+ 00000288  C2 0004		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 0000028B			DrukShortBin PROC STDCALL liczba:DWORD
+				;; funkcja DrukShortBin wysfietla liczbe-argument w postaci binarnej,
+ 0000028B			;; pomijamy nieznaczace zera na poczatku
+				;; rejestr ecx - liczba pozycji znaczacych, rejestr ebx - wskaznik na bufor,
+				;; esi - indeks w buforze, eax - liczba, edx - reszta z dzielenia(czyli nasze '1' i '0')
+				;; edi - liczbe do dzielenia
+				;; funkcja wykorzystuje najprostrzy algorytm zamiany liczby na postac dwujkowa
+				;; czyli dzielimy liczbe przez 2 i reszte zapisujemy na stosie
+				;; i tak do momentu kiedy liczba bedzie równa 0, wtedy odczytujemy liczbe binarna
+				;; w odwrotnej koljnosci do zapisywania na stosie
+				;--- odkladanie na stos
+				push ebx
+				push ecx
+ 0000028E  53			push edx
+ 0000028F  51			push esi
+ 00000290  52			push edi
+ 00000291  56			;--- przygotowywanie rejestrów ---
+ 00000292  57			mov ebx, offset bufor ; do ebx kopiujemy adres bufora,
+				;do którego bedziemy wstawiac kolejne cyfry liczby binarnej
+ 00000293  BB 000000A4 R	xor esi, esi ; zerujemy indeks liter w buforze
+				mov eax, liczba ; do akumulatora kopiujemy nasza liczbe
+ 00000298  33 F6		xor edx, edx ; zerujemy edx
+ 0000029A  8B 45 08		xor ecx, ecx ; zerujemy licznik znaków
+ 0000029D  33 D2		mov edi, 2 ; do edi wstawiamy 2
+ 0000029F  33 C9		;--- cykl dzielenia i wkladania na stos ---
+ 000002A1  BF 00000002		pocz:
+				xor edx, edx ; zerujemy edx poniewaz instrukcja div uzywa rejestrów EDX:EAX
+ 000002A6			div edi ; dzielimy nasza liczbe przez 2
+ 000002A6  33 D2		add edx, '0' ; dodajemy do niej kod znaku zero aby zamienic ja na znak
+ 000002A8  F7 F7		push edx ; i wstawiamy ja na stos
+ 000002AA  83 C2 30		inc ecx ; zwiekszamy licznik cyfr na stosie
+ 000002AD  52			or eax, eax ; wykonyjeme instrukcje or aby ustawic flage ZF jesli eax równa sie zero
+ 000002AE  41			jz @F ; jesli eax równa sie zero to przechodzimy do kolejne etykiety
+ 000002AF  0B C0		jmp pocz ; a jesli jest jeszcze co dzielic to skaczemy na poczatek
+ 000002B1  74 02		;--- tworzenie stringu(napisu)
+ 000002B3  EB F1		; polega na pobraniu ze stosu w odwrotnej kolejnosci niz wstawialismy naszyc zna-ków
+				@@:
+				pop eax ; pobieramy nasz znak i umieszczamy go w akumulatorze
+ 000002B5			mov byte ptr [ebx + esi], al ; nastepnie bit znaku umieszczamy w buforze
+ 000002B5  58			inc esi ; przesówamy pozycje do wstawiania na kolejna w buforze
+ 000002B6  88 04 1E		dec ecx ; i zmniejszamu ilosc liczb do wstawienia
+ 000002B9  46			jz @F ; jesli nie ma juz wiecej cyfr to przechodzimy dalen
+ 000002BA  49			jmp @B ; lecz jesli sa to przechodzimy do pobierania kolejnego znaku ze stosu
+ 000002BB  74 02		;--- nak koniec dodajemy 0Dh, 0Ah oraz 0 ---
+ 000002BD  EB F6		@@:
+				mov byte ptr[ebx + esi], 0Dh ; dodajemy jeszcze na koniec znak noweh lini
+ 000002BF			mov byte ptr[ebx + esi + 1], 0Ah ; oraz znak powrotu karetki
+ 000002BF  C6 04 1E 0D		mov byte ptr[ebx + esi + 2], 0 ; no i na koniec zakanczamy nasz ciag zerem
+ 000002C3  C6 44 1E 01 0A	;--- wyswietlamy
+ 000002C8  C6 44 1E 02 00	invoke lstrlenA, offset bufor ; liczymy dlugosc naszego napisu
+				mov rbin, eax ; kopiujemy go do rbin
+				invoke WriteConsoleA, hout, offset bufor, rbin, offset rout, 0
+ 000002D7  A3 00000000 R	; i wyswietlamy go
+				;--- zdejmowanie ze stosu
+				pop edi
+				pop esi
+ 000002F9  5F			pop edx
+ 000002FA  5E			pop ecx
+ 000002FB  5A			pop ebx
+ 000002FC  59			ret 4
+ 000002FD  5B			DrukShortBin ENDP
+				_TEXT ENDS
+ 000002FF  C2 0004		END start
+ 00000302
+ 00000302
+Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
+.\cw4\cw4.asm						     Symbols 2 - 1
+
+
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA? . . . . . . . . . . . . .	32 Bit	 00000008 Para	  Private 
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000153 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000302 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000189 Private STDCALL
+CharToOemA . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+DrukBin  . . . . . . . . . . . .	P Near	 00000236 _TEXT	Length= 00000055 Public STDCALL
+  liczba . . . . . . . . . . . .	DWord	 bp + 00000008
+  @@d1 . . . . . . . . . . . . .	L Near	 00000251 _TEXT	
+  @@d2 . . . . . . . . . . . . .	L Near	 0000025D _TEXT	
+DrukShortBin . . . . . . . . . .	P Near	 0000028B _TEXT	Length= 00000077 Public STDCALL
+  liczba . . . . . . . . . . . .	DWord	 bp + 00000008
+  pocz . . . . . . . . . . . . .	L Near	 000002A6 _TEXT	
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ScanBin  . . . . . . . . . . . .	P Near	 000001EA _TEXT	Length= 0000004C Public STDCALL
+  adres  . . . . . . . . . . . .	DWord	 bp + 00000008
+  pocz . . . . . . . . . . . . .	L Near	 00000205 _TEXT	
+  nast . . . . . . . . . . . . .	L Near	 00000227 _TEXT	
+ScanInt  . . . . . . . . . . . .	P Near	 00000189 _TEXT	Length= 00000061 Public C
+  adres  . . . . . . . . . . . .	DWord	 bp + 00000008
+  pocz . . . . . . . . . . . . .	L Near	 000001A6 _TEXT	
+  nast . . . . . . . . . . . . .	L Near	 000001D7 _TEXT	
+WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+lstrlenA . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
+STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
+bufor  . . . . . . . . . . . . .	Byte	 000000A4 _DATA	
+hinp . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
+hout . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+naglow . . . . . . . . . . . . .	Byte	 00000008 _DATA	
+naglrot  . . . . . . . . . . . .	Byte	 00000034 _DATA	
+newline  . . . . . . . . . . . .	Byte	 00000031 _DATA	
+poarot . . . . . . . . . . . . .	Byte	 00000055 _DATA	
+ponrot . . . . . . . . . . . . .	Byte	 00000085 _DATA	
+rbin . . . . . . . . . . . . . .	DWord	 00000000 _DATA?	
+rbuf . . . . . . . . . . . . . .	DWord	 00000124 _DATA	
+rinp2  . . . . . . . . . . . . .	DWord	 000000A0 _DATA	
+rinp . . . . . . . . . . . . . .	DWord	 0000009C _DATA	
+rout . . . . . . . . . . . . . .	DWord	 00000098 _DATA	
+rozmN  . . . . . . . . . . . . .	DWord	 0000002D _DATA	
+rozmZ  . . . . . . . . . . . . .	DWord	 0000014F _DATA	
+rrot . . . . . . . . . . . . . .	DWord	 00000004 _DATA?	
+st0  . . . . . . . . . . . . . .	DWord	 0000012C _DATA	
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+tekstZakoncz . . . . . . . . . .	Byte	 00000130 _DATA	
+zmY  . . . . . . . . . . . . . .	DWord	 00000128 _DATA	
+
+	   0 Warnings
+	   0 Errors

@@ -237,15 +237,14 @@ call ScanInt
 add ESP, 8
 mov zmD, EAX
 ;--- obliczenia A / B - C + D
-
-mov EDX,0           ; zerowanie edx
-mov EAX, zmA        ; zm a do eax
-div zmB             ; dzielimy a / b wynik z eax
-mov EDX, 0          ; zerowanie edx
-mov EDX, zmD        ; zmienna c do edx
-add EDX, zmC        ; dodanie c do D wynik w edx
-sub EAX, EDX        ; odejmowanie wyik dzielenia minus wynik dodawania wyik w eax 
-
+mov EDX, 0			; zerowanie EDX
+mov EAX, 0          ; zerowanie EAX
+mov EAX, zmA        ; zm A do EAX
+div zmB				; dzielenie  A / B wynik w EAX
+mov EDX, zmC        ; zmienna C do EDX
+sub EAX, EDX		; odejumjemy od wyniku dzielenia C, wynik w EAX
+add EAX, zmD		; dodajemy do EAX zmienn¹ D, wynik w EAX
+mov EDX, 0          ; sprz¹tanie, zerowanie edx
 ;;;; ................
 ;--- wyprowadzenie wyniku obliczeñ ---
 push EAX
@@ -275,25 +274,6 @@ push	2		      ; iloœæ znaków
 push	OFFSET nowa 	; wska¿nik na tekst
 push	hout		      ; deskryptor buforu konsoli
 call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-;--- wyswietlenie opisu zadania b ---------
-push OFFSET zadB
-push OFFSET ZadB
-call CharToOemA            ; konwersja polskich znaków
-
-push 0                     ; rezerwa, musi byæ zero
-push OFFSET rout           ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
-push rozmB                 ; iloœæ znaków
-push OFFSET ZadB           ; wska¿nik na tekst
-push hout                  ; deskryptor buforu konsoli
-call WriteConsoleA 
-;--- wyœwietlenie now¹ linii ---
-push	0		      ; rezerwa, musi byæ zero
-push	OFFSET rout 	; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
-push	2		      ; iloœæ znaków
-push	OFFSET nowa 	; wska¿nik na tekst
-push	hout		      ; deskryptor buforu konsoli
-call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-;--- Zadanie b)----  
 ;--- wyœwietlenie nowej lini ---------
 push 0                 ; rezerwa, musi byæ zero
 push OFFSET rout      ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków

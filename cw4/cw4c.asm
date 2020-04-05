@@ -1,5 +1,4 @@
-;CW4c ‚ÄûInstrukcje arytmetyczne i logiczne.Przesuwanie i rotacja bit√≥w‚Äù
-;Aplikacja z operacjami arytmetycznymi, logicznymi, przesuwania
+;Przesuwanie i rotacja bitÛw
 .586P
 .MODEL flat, STDCALL
 option casemap :none
@@ -29,24 +28,28 @@ _DATA SEGMENT
 hout DD ?
 hinp DD ?
 naglow DB "Autor aplikacji Grzegorz Makowski.",0Dh,0Ah,0
+rozmN DD $ - naglow
 newline DB 0Dh,0Ah,0
 ALIGN 4
 naglrot DB 0Dh,0Ah,"Liczba binarna przed rotacja: ",0
 poarot DB 0Dh,0Ah,"Cyklicznie przez znacznik CF 4 w prawo razy: ",0
 ponrot DB 0Dh,0Ah,"W lewo 2 razy: ",0
 align 4
-rout DD 0 ;faktyczna ilosc wyprowadzonych znak√≥w
-rinp DD 0 ;faktyczna ilosc wprowadzonych znak√≥w
-rinp2 DD 0 ;faktyczna ilosc wprowadzonych znak√≥w
+rout DD 0 ;faktyczna ilosc wyprowadzonych znakÛw
+rinp DD 0 ;faktyczna ilosc wprowadzonych znakÛw
+rinp2 DD 0 ;faktyczna ilosc wprowadzonych znakÛw
 bufor DB 128 dup(?)
 rbuf DD 128
 zmY DD 0
 st0 DD 10100110001110000111100000111110b
+
+tekstZakoncz DB "DziÍkujÍ za uwagÍ! PWSBiA@2020",0                  ; nag≥Ûwek
+rozmZ DD $ - tekstZakoncz
 _DATA ENDS
 ;------------
 _DATA? SEGMENT
-rbin dd ? ;ilosc znak√≥w liczby binarnej
-rrot dd ? ;ilosc znak√≥w poszczeg√≥lnych nagl√≥wnk√≥w przy rotacji
+rbin dd ? ;ilosc znakÛw liczby binarnej
+rrot dd ? ;ilosc znakÛw poszczegÛlnych naglÛwnkÛw przy rotacji
 _DATA? ENDS
 _TEXT SEGMENT
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,19 +61,19 @@ mov hout, EAX ; deskryptor wyjsciowego bufora konsoli
 push STD_INPUT_HANDLE
 call GetStdHandle ; wywolanie funkcji GetStdHandle
 mov hinp, EAX ; deskryptor wejsciowego bufora konsoli
-;--- nagl√≥wek ---------
+;--- naglÛwek ---------
 push OFFSET naglow
 push OFFSET naglow
-call CharToOemA ; konwersja polskich znak√≥w
+call CharToOemA ; konwersja polskich znakÛw
 ;--- wyswietlenie ---------
 push 0 ; rezerwa, musi byc zero
-push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znak√≥w
-push rozmN ; ilosc znak√≥w
+push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znakÛw
+push rozmN ; ilosc znakÛw
 push OFFSET naglow ; wskaznik na tekst
 push hout ; deskryptor buforu konsoli
 call WriteConsoleA ; wywolanie funkcji WriteConsoleA
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-invoke CharToOemA, offset naglrot, offset bufor ; konwersja polskich znak√≥w
+invoke CharToOemA, offset naglrot, offset bufor ; konwersja polskich znakÛw
 ; liczymy dlugosc stringu do wyswietlenia
 invoke lstrlenA, offset bufor
 mov rrot, eax
@@ -78,32 +81,52 @@ mov rrot, eax
 invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
 ; i wyswietlamy nasz ciag binarny
 invoke DrukBin, st0
-invoke CharToOemA, offset poarot, offset bufor ; konwersja polskich znak√≥w
+invoke CharToOemA, offset poarot, offset bufor ; konwersja polskich znakÛw
 ; liczymy dlugosc stringu do wyswietlenia
 invoke lstrlenA, offset bufor
 mov rrot, eax
 ; wyswietlamy powiadomienia o rotacji
 invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
-mov eax, st0 ; kopiujemy nasz ciag bit√≥w do akumulatora
-shr eax, 4 ; przesuwamy go w prawo o 4 pozycje
+mov eax, st0 ; kopiujemy nasz ciag bitÛw do akumulatora
+rcr eax, 4 ; przesuwamy go w prawo o 4 pozycje
 mov st0, eax ; i kopiujemy spowrotem do zmiennej st0 i wyswietlamy ciag binarny
 invoke DrukBin, st0
-invoke CharToOemA, offset ponrot, offset bufor ; konwersja polskich znak√≥w
+invoke CharToOemA, offset ponrot, offset bufor ; konwersja polskich znakÛw
 ; liczymy dlugosc stringu do wyswietlenia
 invoke lstrlenA, offset bufor
 mov rrot, eax
 ; wyswietlamy powiadomienia o rotacji
 invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
-mov eax, st0 ; kopiujemy nasz ciag bit√≥w do akumulatora
+mov eax, st0 ; kopiujemy nasz ciag bitÛw do akumulatora
 rol eax, 2 ; przesuwamy go w lewo o 2 pozycje
 mov st0, eax ; i kopiujemy spowrotem do zmiennej st0
 ; i wyswietlamy nasz ciag binarny
 invoke DrukBin, st0
+;--- wyúwietlenie nowπ linii ---
+push	0		      	; rezerwa, musi byÊ zero
+push	OFFSET rout 	; wskaünik na faktycznπ iloúÊ wyprowadzonych znakÛw 
+push	2		      	; iloúÊ znakÛw
+push	OFFSET newline 	; wskaønik na tekst
+push	hout		    ; deskryptor buforu konsoli
+call	WriteConsoleA	; wywo≥anie funkcji WriteConsoleA
+;--- wyúwietlenie zakonczenia ---
+push 0                  ; rezerwa, musi byÊ zero
+push OFFSET rout        ; wskaünik na faktycznπ iloúÊ wyprowadzonych znakÛw
+push rozmZ  
+push OFFSET tekstZakoncz
+push OFFSET tekstZakoncz
+call CharToOemA
+push 0                          ; rezerwa, musi byÊ zero
+push OFFSET rout                ; wskaünik na faktycznπ iloúÊ wyprowadzonych znakÛw
+push rozmZ                      ; iloúÊ znakÛw
+push OFFSET tekstZakoncz        ; wskaønik na tekst
+push hout                       ; deskryptor buforu konsoli
+call WriteConsoleA              ; wywo≥anie funkcji WriteConsole
 ;--- zakonczenie procesu ---------
 push 0
 call ExitProcess ; wywolanie funkcji ExitProcess
 ScanInt PROC C adres
-;; funkcja ScanInt przeksztalca ciag cyfr do liczby, kt√≥ra jest zwracana przez EAX
+;; funkcja ScanInt przeksztalca ciag cyfr do liczby, ktÛra jest zwracana przez EAX
 ;; argument - zakonczony zerem wiersz z cyframi
 ;; rejestry: EBX - adres wiersza, EDX - znak liczby, ESI - indeks cyfry w wierszu, EDI - tymcza-sowy
 ;--- poczatek funkcji
@@ -115,21 +138,21 @@ push ESI
 push EDI
 ;--- przygotowywanie cyklu
 INVOKE lstrlenA, adres
-mov EDI, EAX ;ilosc znak√≥w
-mov ECX, EAX ;ilosc powt√≥rzen = ilosc znak√≥w
+mov EDI, EAX ;ilosc znakÛw
+mov ECX, EAX ;ilosc powtÛrzen = ilosc znakÛw
 xor ESI, ESI ; wyzerowanie ESI
 xor EDX, EDX ; wyzerowanie EDX
 xor EAX, EAX ; wyzerowanie EAX
 mov EBX, adres
 ;--- cykl --------------------------
-pocz: cmp BYTE PTR [EBX+ESI], 02Dh ;por√≥wnanie z kodem '-'
+pocz: cmp BYTE PTR [EBX+ESI], 02Dh ;porÛwnanie z kodem '-'
 jne @F
 mov EDX, 1
 jmp nast
-@@: cmp BYTE PTR [EBX+ESI], 030h ;por√≥wnanie z kodem '0'
+@@: cmp BYTE PTR [EBX+ESI], 030h ;porÛwnanie z kodem '0'
 jae @F
 jmp nast
-@@: cmp BYTE PTR [EBX+ESI], 039h ;por√≥wnanie z kodem '9'
+@@: cmp BYTE PTR [EBX+ESI], 039h ;porÛwnanie z kodem '9'
 jbe @F
 jmp nast
 ;----
@@ -157,12 +180,12 @@ pop ESI
 pop EDX
 pop ECX
 pop EBX
-;--- powr√≥t
+;--- powrÛt
 ret
 ScanInt ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ScanBin PROC STDCALL adres:DWORD
-;; funkcja ScanBin przeksztalca ciag cyfr do liczby, kt√≥ra jest zwracana przez EAX
+;; funkcja ScanBin przeksztalca ciag cyfr do liczby, ktÛra jest zwracana przez EAX
 ;; argument - zakonczony zerem wiersz z cyframi binarnymi '0' badz '1'
 ;; rejestry: EBX - adres wiersza, ESI - indeks cyfry w wierszu, EDI - tymczasowy
 ;--- poczatek funkcji
@@ -174,20 +197,20 @@ push esi
 push edi
 ;--- przygotowanie cyklu
 invoke lstrlenA, adres
-mov ecx, eax ; ilosc powt√≥rzen = ilosc znak√≥w
+mov ecx, eax ; ilosc powtÛrzen = ilosc znakÛw
 mov ebx, adres ; do rejetru EBX przenosimy adres ciagu cyfr
 xor esi, esi ; zerujemy numer kolejnych cyfr w tablicy
 xor edi, edi ; zerujemy rejestr tymczasowy
 xor eax, eax ; zerujemy akumulator
 ;--- cykl --------------------
 pocz:
-cmp byte ptr[ebx + esi], '0' ; por√≥wnujemy znak z bufora z znakiem '0'
-jae @F ; jesli jest wiekszy badz r√≥wny to dobrze, przechodzimy do kolejnej etykiety.
+cmp byte ptr[ebx + esi], '0' ; porÛwnujemy znak z bufora z znakiem '0'
+jae @F ; jesli jest wiekszy badz rÛwny to dobrze, przechodzimy do kolejnej etykiety.
 jmp nast ; jesli jest mniejszy to oznacza iz jest to niepoprawny znak,
 ; przechodzimy do nastepnego znaku.
 @@:
-cmp byte ptr[ebx + esi], '1' ; por√≥wnujemy znak z bufora z kodem znaku '1'
-jbe @F ; jesli jest mniejszy badz r√≥wny to dobrze i przechodzimy do kolejnej etykiety
+cmp byte ptr[ebx + esi], '1' ; porÛwnujemy znak z bufora z kodem znaku '1'
+jbe @F ; jesli jest mniejszy badz rÛwny to dobrze i przechodzimy do kolejnej etykiety
 jmp nast ; jesli jest wiekszy to jest to niepoprawny znak i przechodzimy do nastep-nego zna-ku.
 @@:
 mov edi, 2 ; do rejestru edi wstawiamy 2
@@ -199,8 +222,8 @@ sub al, '0' ; odejmujemy kod znaku '0' aby uzyskac cyfre 1 badz 0
 add eax, edi ; i dodajemy to do zapisanej liczby
 nast: ; przechodzenie do nastepnej pozycji polega na:
 inc esi ; zwiekszeniu indeksu cyfry aby przejsc na kolejny znak
-dec ecx ; zmniejszeniu kiczby znak√≥w do przejscia o 1
-jz @F ; jesli ilosc znak√≥w do przejscia wynosi 0 to przechodzimy do kolejnej etykiety
+dec ecx ; zmniejszeniu kiczby znakÛw do przejscia o 1
+jz @F ; jesli ilosc znakÛw do przejscia wynosi 0 to przechodzimy do kolejnej etykiety
 jmp pocz ; jesli jeszcze mamy znaki do przejscia to zaczynamy wykonywac od po-czatku wszystko,
 ; tylko tym razem na kolejnym znaku
 @@:
@@ -210,7 +233,7 @@ pop esi
 pop edx
 pop ecx
 pop ebx
-;--- powr√≥t
+;--- powrÛt
 ret 4 ; poniewaz funkcja uzywa konwencji STDCALL wiec sprzatamy po sobie na stosie
 ; odejmujac od esp 4
 ScanBin ENDP
@@ -241,8 +264,8 @@ mov BYTE PTR [EBX+32],0Dh
 mov BYTE PTR [EBX+33],0Ah
 ;--- wyswietlenie wynika ---------
 push 0 ; rezerwa, musi byc zero
-push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znak√≥w
-push 34 ; ilosc znak√≥w
+push OFFSET rout ; wskaznik na faktyczna ilosc wyprowadzonych znakÛw
+push 34 ; ilosc znakÛw
 push OFFSET bufor ; wskaznik na tekst w buforze
 push hout ; deskryptor buforu konsoli
 call WriteConsoleA ; wywolanie funkcji WriteConsoleA
@@ -251,7 +274,7 @@ pop EBX
 pop ESI
 pop EDI
 pop ECX
-;--- powr√≥t
+;--- powrÛt
 ret 4
 DrukBin ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -263,7 +286,7 @@ DrukShortBin PROC STDCALL liczba:DWORD
 ;; edi - liczbe do dzielenia
 ;; funkcja wykorzystuje najprostrzy algorytm zamiany liczby na postac dwujkowa
 ;; czyli dzielimy liczbe przez 2 i reszte zapisujemy na stosie
-;; i tak do momentu kiedy liczba bedzie r√≥wna 0, wtedy odczytujemy liczbe binarna
+;; i tak do momentu kiedy liczba bedzie rÛwna 0, wtedy odczytujemy liczbe binarna
 ;; w odwrotnej koljnosci do zapisywania na stosie
 ;--- odkladanie na stos
 push ebx
@@ -271,30 +294,30 @@ push ecx
 push edx
 push esi
 push edi
-;--- przygotowywanie rejestr√≥w ---
+;--- przygotowywanie rejestrÛw ---
 mov ebx, offset bufor ; do ebx kopiujemy adres bufora,
-;do kt√≥rego bedziemy wstawiac kolejne cyfry liczby binarnej
+;do ktÛrego bedziemy wstawiac kolejne cyfry liczby binarnej
 xor esi, esi ; zerujemy indeks liter w buforze
 mov eax, liczba ; do akumulatora kopiujemy nasza liczbe
 xor edx, edx ; zerujemy edx
-xor ecx, ecx ; zerujemy licznik znak√≥w
+xor ecx, ecx ; zerujemy licznik znakÛw
 mov edi, 2 ; do edi wstawiamy 2
 ;--- cykl dzielenia i wkladania na stos ---
 pocz:
-xor edx, edx ; zerujemy edx poniewaz instrukcja div uzywa rejestr√≥w EDX:EAX
+xor edx, edx ; zerujemy edx poniewaz instrukcja div uzywa rejestrÛw EDX:EAX
 div edi ; dzielimy nasza liczbe przez 2
 add edx, '0' ; dodajemy do niej kod znaku zero aby zamienic ja na znak
 push edx ; i wstawiamy ja na stos
 inc ecx ; zwiekszamy licznik cyfr na stosie
-or eax, eax ; wykonyjeme instrukcje or aby ustawic flage ZF jesli eax r√≥wna sie zero
-jz @F ; jesli eax r√≥wna sie zero to przechodzimy do kolejne etykiety
+or eax, eax ; wykonyjeme instrukcje or aby ustawic flage ZF jesli eax rÛwna sie zero
+jz @F ; jesli eax rÛwna sie zero to przechodzimy do kolejne etykiety
 jmp pocz ; a jesli jest jeszcze co dzielic to skaczemy na poczatek
 ;--- tworzenie stringu(napisu)
-; polega na pobraniu ze stosu w odwrotnej kolejnosci niz wstawialismy naszyc zna-k√≥w
+; polega na pobraniu ze stosu w odwrotnej kolejnosci niz wstawialismy naszyc zna-kÛw
 @@:
 pop eax ; pobieramy nasz znak i umieszczamy go w akumulatorze
 mov byte ptr [ebx + esi], al ; nastepnie bit znaku umieszczamy w buforze
-inc esi ; przes√≥wamy pozycje do wstawiania na kolejna w buforze
+inc esi ; przesÛwamy pozycje do wstawiania na kolejna w buforze
 dec ecx ; i zmniejszamu ilosc liczb do wstawienia
 jz @F ; jesli nie ma juz wiecej cyfr to przechodzimy dalen
 jmp @B ; lecz jesli sa to przechodzimy do pobierania kolejnego znaku ze stosu

@@ -1,4 +1,4 @@
-;CW4 c :  Przesuwanie i rotacja bitów
+;Przesuwanie i rotacja bitów
 .586P
 .MODEL flat, STDCALL
 option casemap :none
@@ -88,7 +88,7 @@ mov rrot, eax
 ; wyswietlamy powiadomienia o rotacji
 invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
 mov eax, st0 ; kopiujemy nasz ciag bitów do akumulatora
-shr eax, 4 ; przesuwamy go w prawo o 4 pozycje
+rcr eax, 4 ; przesuwamy go w prawo o 4 pozycje
 mov st0, eax ; i kopiujemy spowrotem do zmiennej st0 i wyswietlamy ciag binarny
 invoke DrukBin, st0
 invoke CharToOemA, offset ponrot, offset bufor ; konwersja polskich znaków

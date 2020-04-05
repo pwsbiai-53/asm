@@ -1,8 +1,8 @@
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/05/20 15:00:32
 .\cw4\cw4.asm						     Page 1 - 1
 
 
-				;CW4 c :  Przesuwanie i rotacja bitów
+				;Przesuwanie i rotacja bitów
 				.586P
 				.MODEL flat, STDCALL
 				option casemap :none
@@ -125,7 +125,7 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
 				; wyswietlamy powiadomienia o rotacji
 				invoke WriteConsoleA, hout, offset bufor, rrot, offset rout, 0
  000000C5  A1 0000012C R	mov eax, st0 ; kopiujemy nasz ciag bitów do akumulatora
- 000000CA  C1 E8 04		shr eax, 4 ; przesuwamy go w prawo o 4 pozycje
+ 000000CA  C1 D8 04		rcr eax, 4 ; przesuwamy go w prawo o 4 pozycje
  000000CD  A3 0000012C R	mov st0, eax ; i kopiujemy spowrotem do zmiennej st0 i wyswietlamy ciag binarny
 				invoke DrukBin, st0
 				invoke CharToOemA, offset ponrot, offset bufor ; konwersja polskich znaków
@@ -380,7 +380,7 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
  000002FF  C2 0004		END start
  00000302
  00000302
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/29/20 21:41:42
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/05/20 15:00:32
 .\cw4\cw4.asm						     Symbols 2 - 1
 
 

@@ -104,16 +104,14 @@ mov AL,BYTE PTR [EBX+5]
 mov BYTE PTR [EBX+4], AL
 mov BYTE PTR [EBX+5], CL
 
-
 ;--- wyœwietlenie bufor ---
 push	0		; rezerwa, musi byæ zero
 push	OFFSET rout 	; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
 push	8		; iloœæ znaków
-push	OFFSET tab1	; wska¿nik na tekst
+;push	OFFSET tab1	; wska¿nik na tekst
+push	OFFSET tab1
 push	hout		; deskryptor buforu konsoli
 call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA	
-
-
 
 ;--- wyœwietlenie nowej lini ---------
 
@@ -157,7 +155,6 @@ push rozmZ                                                      ; iloœæ znaków
 push OFFSET tekstZakoncz                                        ; wska¿nik na tekst
 push hout                                                       ; deskryptor buforu konsoli
 call WriteConsoleA                                              ; wywo³anie funkcji WriteConsoleA
-
 
 ;--- zakoñczenie procesu ---------
 

@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/01/20 10:46:23
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/05/20 16:45:25
 .\cw2\cw2.asm						     Page 1 - 1
 
 
@@ -133,16 +133,14 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/01/20 10:46:23
  000000A4  88 43 04		mov BYTE PTR [EBX+4], AL
  000000A7  88 4B 05		mov BYTE PTR [EBX+5], CL
 
-
 				;--- wyœwietlenie bufor ---
  000000AA  6A 00		push	0		; rezerwa, musi byæ zero
  000000AC  68 00000058 R	push	OFFSET rout 	; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
  000000B1  6A 08		push	8		; iloœæ znaków
- 000000B3  68 0000004C R	push	OFFSET tab1	; wska¿nik na tekst
+				;push	OFFSET tab1	; wska¿nik na tekst
+ 000000B3  68 0000004C R	push	OFFSET tab1
  000000B8  FF 35 00000000 R	push	hout		; deskryptor buforu konsoli
  000000BE  E8 00000000 E	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA	
-
-
 
 				;--- wyœwietlenie nowej lini ---------
 
@@ -186,7 +184,6 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/01/20 10:46:23
  00000137  68 00000083 R	push OFFSET tekstZakoncz                                        ; wska¿nik na tekst
  0000013C  FF 35 00000000 R	push hout                                                       ; deskryptor buforu konsoli
  00000142  E8 00000000 E	call WriteConsoleA                                              ; wywo³anie funkcji WriteConsoleA
-
 
 				;--- zakoñczenie procesu ---------
 
@@ -277,7 +274,7 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/01/20 10:46:23
  000001C7			_TEXT ENDS
 
 				END start
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/01/20 10:46:23
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/05/20 16:45:25
 .\cw2\cw2.asm						     Symbols 2 - 1
 
 

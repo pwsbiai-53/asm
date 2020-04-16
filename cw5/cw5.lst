@@ -1,79 +1,129 @@
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/17/20 01:34:08
 .\cw5\cw5.asm						     Page 1 - 1
 
 
-				;"Podprogramy i makrodefinicje"
+				;Æwiczenie 5, Podprogramy i makrodefinicje
 				.586P
-				.MODEL flat, STDCALL
-				;--- stale z pliku .\include\windows.inc ---
- =-0000000A			STD_INPUT_HANDLE                     equ -10
- =-0000000B			STD_OUTPUT_HANDLE                    equ -11
-				;--- stale ---
- = 00000080			MBUF = 128
-				;--- makra ---
-				PODAJDESKR MACRO handle, deskrypt
-				 push	handle
-				 call	GetStdHandle
-				 mov	deskrypt,EAX ;; deskryptor bufora konsoli
-				ENDM
-
-				PLZNAKI MACRO text, bufor
-				 invoke CharToOemA, addr text, addr bufor
-				ENDM
-
-				WYSWIETLENIE MACRO bufor, rozmiar
-				 ;--- wyœwietlenie wyniku ---------
-				 push 0 ; rezerwa, musi byæ zero
-				 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
-				 push rozmiar ; iloœæ znaków
-				 push OFFSET bufor ; wska¿nik na tekst w buforze
-				 push hout ; deskryptor buforu konsoli
-				 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				ENDM
-
-				ZMIENNA MACRO deskkons, bufor, rozmb, frozm, zmienna
-				 invoke ReadConsoleA, deskkons, addr bufor, rozmb, addr frozm, 0
-				 push OFFSET bufor
-				 call ScanInt
-				 add ESP, 4
-				 mov zmienna, EAX
-				ENDM
-
-				;--- funkcje API Win32 z pliku  .\include\user32.inc ---
-				CharToOemA PROTO tekst1:DWORD,tekst2:DWORD
-
-				;--- funkcje API Win32 z pliku .\include\kernel32.inc ---
-				GetStdHandle PROTO :DWORD
-				ReadConsoleA PROTO 	hinp:DWORD,adres_bufor:DWORD,rbuf:DWORD,adres_rinp:DWORD,rezerwa:DWORD
-				 	;
-				WriteConsoleA PROTO 	hout:DWORD,adres_bufor:DWORD,rozm:DWORD,adres_out:DWORD,rezerwa:DWORD
-
-				ExitProcess PROTO :DWORD
-				wsprintfA PROTO C :VARARG
-				lstrlenA PROTO :DWORD
-				;--- funkcje
-				ScanInt PROTO C adres:DWORD
-				DrukBin PROTO STDCALL liczba:DWORD
-
-				arytm PROTO C
-				logika PROTO STDCALL argA:DWORD,argB:DWORD,argC:DWORD,argD:DWORD
-				przesuw PROTO C arg:DWORD
+				.MODEL flat, stdcall
 				;-------------
 				includelib .\lib\user32.lib
 				includelib .\lib\kernel32.lib
+				;--- stale z pliku .\include\windows.inc ---
+ =-0000000A			STD_INPUT_HANDLE    equ -10
+ =-0000000B			STD_OUTPUT_HANDLE   equ -11
+				;--- stale ---
+ = 00000080			mbuf = 128
+ = 00000000			SYS_exit        equ 0
+				;--- makra ---
+				podajdeskr macro handle, deskrypt 
+				 push	handle
+				 call	GetStdHandle
+				 mov	deskrypt,eax ; deskryptor bufora konsoli
+				endm
+
+				plznaki macro text, bufor
+				 invoke CharToOemA, addr text, addr bufor
+				endm
+
+				wyswietl macro bufor, rozmiar
+				 ;--- wyœwietlenie wyniku ---------
+				 push 0 ; rezerwa, musi byæ zero
+				 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+				 push rozmiar ; iloœæ znaków
+				 push offset bufor ; wska¿nik na tekst w buforze
+				 push hout ; deskryptor buforu konsoli
+				 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				endm
+
+				nowalinia macro nowa
+				;--- wyœwietlenie now¹ linii ---
+				push	0		        ; rezerwa, musi byæ zero
+				push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+				push	2		        ; iloœæ znaków
+				push	OFFSET nowa 	; wska¿nik na tekst
+				push	hout		    ; deskryptor buforu konsoli
+				call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				endm
+
+				zmienna macro deskkons, bufor, rozmb, frozm, zmienna
+				 invoke ReadConsoleA, deskkons, addr bufor, rozmb, addr frozm, 0
+				 push offset bufor
+				 call ScanInt
+				 add esp, 4
+				 mov zmienna, eax
+				endm
+
+				;--- funkcje API Win32 z pliku  .\include\user32.inc ---
+				CharToOemA proto :dword,:dword
+
+				;--- funkcje API Win32 z pliku .\include\kernel32.inc ---
+				GetStdHandle proto :dword
+				ReadConsoleA proto 	hinp:dword,adres_bufor:dword,rbuf:dword,adres_rinp:dword,rezerwa:dword
+				WriteConsoleA proto hout:dword,adres_bufor:dword,rozm:dword,adres_out:dword,rezerwa:dword
+				ExitProcess proto :dword
+				wsprintfA proto c :vararg
+				lstrlenA proto :dword
+
+				;--- funkcje
+				ScanInt proto c :dword
+				DrukBin proto stdcall :dword
+				; --- deklaracje podprogramów
+				arytm proto c
+				logika proto stdcall :dword, :dword, :dword, :dword
+				przesuwanie proto stdcall :dword 
+
 				;-------------
- 00000000			_DATA SEGMENT
+ 00000000			_data segment
  00000000 00000000			hout	DD	?
  00000004 00000000			hinp	DD	?
- 00000008 41 75 74 6F 72		naglow	DB	"Autor aplikacji Andrzej Witek",0
+ 00000008 0D 0A 00			nl DB 0Dh, 0Ah, 0	; nowa linia									;nowa linia
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 0000000C 41 75 74 6F 72		naglow DB "Autor aplikacji Grzegorz Makowski i53",0                 ; nag³ówek
 	   20 61 70 6C 69
 	   6B 61 63 6A 69
-	   20 41 6E 64 72
-	   7A 65 6A 20 57
-	   69 74 65 6B 00
-					ALIGN	4	; przesuniecie do adresu podzielnego na 4
- 00000028 00000020			rozmN	DD	$ - naglow	;iloœæ znaków w tablicy
- 0000002C 0D 0A 50 72 6F		zaprA	DB	0Dh,0Ah,"Proszê wprowadziæ argument a [+Enter]: ",0
+	   20 47 72 7A 65
+	   67 6F 72 7A 20
+	   4D 61 6B 6F 77
+	   73 6B 69 20 69
+	   35 33 00
+					align	4												; przesuniecie do adresu podzielnego na 4
+ 00000034 00000028			rozmN DD $ - naglow                                                ; ilosc znakow
+					align	4												; przesuniecie do adresu podzielnego na 4
+ 00000038 0D 0A 50 6F 64		temat DB 0Dh,0Ah,"Podprogramy i makrodefinicje.",0
+	   70 72 6F 67 72
+	   61 6D 79 20 69
+	   20 6D 61 6B 72
+	   6F 64 65 66 69
+	   6E 69 63 6A 65
+	   2E 00
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 00000058 00000020			rozmT DD $ - temat
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 0000005C 0D 0A 57 70 72		naglowA DB 0Dh,0Ah, "WprowadŸ 4 parametry fun. f() = A/B-C+D",0  ; nag³ówek
+	   6F 77 61 64 9F
+	   20 34 20 70 61
+	   72 61 6D 65 74
+	   72 79 20 66 75
+	   6E 2E 20 66 28
+	   29 20 3D 20 41
+	   2F 42 2D 43 2B
+	   44 00
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 00000088 0000002C			rozmnaglA DD $ - naglowA 
+					align	4
+ 0000008C 0D 0A 57 70 72		naglowB DB 0Dh,0Ah, "WprowadŸ 4 parametry fun. f() = A#B*~C|D",0  ; nag³ówek
+	   6F 77 61 64 9F
+	   20 34 20 70 61
+	   72 61 6D 65 74
+	   72 79 20 66 75
+	   6E 2E 20 66 28
+	   29 20 3D 20 41
+	   23 42 2A 7E 43
+	   7C 44 00
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 000000B8 0000002C			rozmnaglB DD $ - naglowB
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 000000BC 0D 0A 50 72 6F		zaprA	DB	0Dh,0Ah,"Proszê wprowadziæ argument a [+Enter]: ",0
 	   73 7A EA 20 77
 	   70 72 6F 77 61
 	   64 7A 69 E6 20
@@ -82,10 +132,10 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
 	   20 5B 2B 45 6E
 	   74 65 72 5D 3A
 	   20 00
-					ALIGN	4
- 00000058 0000002C			rozmA	DD	$ - zaprA	;iloœæ znaków w tablicy
- 0000005C 00000001			zmA	DD	1	; argument a
- 00000060 0D 0A 50 72 6F		zaprB	DB	0Dh,0Ah,"Proszê wprowadziæ argument b [+Enter]: ",0
+					align	4
+ 000000E8 0000002C			rozmA	DD	$ - zaprA	;iloœæ znaków w tablicy
+ 000000EC 00000001			zmA	DD	1	; argument a
+ 000000F0 0D 0A 50 72 6F		zaprB	DB	0Dh,0Ah,"Proszê wprowadziæ argument b [+Enter]: ",0
 	   73 7A EA 20 77
 	   70 72 6F 77 61
 	   64 7A 69 E6 20
@@ -94,10 +144,10 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
 	   20 5B 2B 45 6E
 	   74 65 72 5D 3A
 	   20 00
-					ALIGN	4
- 0000008C 0000002C			rozmB	DD	$ - zaprB	;iloœæ znaków w tablicy
- 00000090 00000002			zmB	DD	2	; argument b
- 00000094 0D 0A 50 72 6F		zaprC	DB	0Dh,0Ah,"Proszê wprowadziæ argument c [+Enter]: ",0
+					align	4
+ 0000011C 0000002C			rozmB	DD	$ - zaprB	;iloœæ znaków w tablicy
+ 00000120 00000002			zmB	DD	2	; argument b
+ 00000124 0D 0A 50 72 6F		zaprC	DB	0Dh,0Ah,"Proszê wprowadziæ argument c [+Enter]: ",0
 	   73 7A EA 20 77
 	   70 72 6F 77 61
 	   64 7A 69 E6 20
@@ -106,10 +156,11 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
 	   20 5B 2B 45 6E
 	   74 65 72 5D 3A
 	   20 00
-					ALIGN	4
- 000000C0 0000002C			rozmC	DD	$ - zaprC	;iloœæ znaków w tablicy
- 000000C4 00000003			zmC	DD	3	; argument c
- 000000C8 0D 0A 50 72 6F		zaprD	DB	0Dh,0Ah,"Proszê wprowadziæ argument d [+Enter]: ",0
+					align	4
+ 00000150 0000002C			rozmC	DD	$ - zaprC	;iloœæ znaków w tablicy
+ 00000154 00000003			zmC	DD	3	; argument c
+					align	4
+ 00000158 0D 0A 50 72 6F		zaprD	DB	0Dh,0Ah,"Proszê wprowadziæ argument d [+Enter]: ",0
 	   73 7A EA 20 77
 	   70 72 6F 77 61
 	   64 7A 69 E6 20
@@ -118,365 +169,557 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
 	   20 5B 2B 45 6E
 	   74 65 72 5D 3A
 	   20 00
-					ALIGN	4
- 000000F4 0000002C			rozmD	DD	$ - zaprD	;iloœæ znaków w tablicy
- 000000F8 00000004			zmD	DD	4	; argument d
- 000000FC 46 75 6E 6B 63		wzor	     DB	"Funkcja y=a/b-c+d = %4ld",0
-	   6A 61 20 79 3D
-	   61 2F 62 2D 63
-	   2B 64 20 3D 20
-	   25 34 6C 64 00
-					ALIGN	4
- 00000118 46 75 6E 6B 63		wzor2	     DB	"Funkcja y=a#b*~c|d = %4ld",0
-	   6A 61 20 79 3D
-	   61 23 62 2A 7E
-	   63 7C 64 20 3D
+					align	4
+ 00000184 0000002C			rozmD	DD	$ - zaprD	;iloœæ znaków w tablicy
+					align	4
+ 00000188 00000004			zmD	DD	4	; argument d
+					align	4
+ 0000018C 0A 5A 61 64 61		zadA DB 0Ah,"Zadanie a) ",0               ; nag³ówek zadania A
+	   6E 69 65 20 61
+	   29 20 00
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 0000019C 00000010			rozmzadA DD $ - zadA
+					align	4	; przesuniecie do adresu podzielnego na 4
+ 000001A0 0D 0A 5A 61 64		zadB DB 0Dh,0Ah,"Zadanie b) ",0               ; nag³ówek zadania B
+	   61 6E 69 65 20
+	   62 29 20 00
+					align	4
+ 000001B0 00000010			rozmzadB DD $ - zadB
+					align	4
+ 000001B4 0D 0A 5A 61 64		zadC DB 0Dh,0Ah,"Zadanie c) ",0               ; nag³ówek zadania C
+	   61 6E 69 65 20
+	   63 29 20 00
+					align	4
+ 000001C4 00000010			rozmzadC DD $ - zadC
+					align 4
+ 000001C8 0D 0A 4C 69 63		rot1 DB 0Dh,0Ah,"Liczba binarna: ",0
+	   7A 62 61 20 62
+	   69 6E 61 72 6E
+	   61 3A 20 00
+					align	4
+ 000001DC 00000014			rozmrot1 DD $ - rot1
+ 000001E0 0D 0A 43 79 6B		rot2 DB 0Dh,0Ah,"Cykl.prawo CF4: ",0
+	   6C 2E 70 72 61
+	   77 6F 20 43 46
+	   34 3A 20 00
+					align	4
+ 000001F4 00000014			rozmrot2 DD $ - rot2
+ 000001F8 0D 0A 57 20 6C		rot3 DB 0Dh,0Ah,"W lewo 2 razy : ",0
+	   65 77 6F 20 32
+	   20 72 61 7A 79
+	   20 3A 20 00
+					align	4
+ 0000020C 00000014			rozmrot3 DD $ - rot3
+ 00000210 0D 0A 46 75 6E		wzorf	     DB	0Dh,0Ah,"Funkcja f() = %4ld",0
+	   6B 63 6A 61 20
+	   66 28 29 20 3D
 	   20 25 34 6C 64
 	   00
-					ALIGN	4
- 00000134 0D 0A 00		      	newline     DB    0Dh,0Ah,0
-					ALIGN	4
- 00000138 00000000			rout	DD	0 ;faktyczna iloœæ wyprowadzonych znaków
- 0000013C 00000000			rinp	DD	0 ;faktyczna iloœæ wprowadzonych znaków
- 00000140 00000000			rinp2	DD	0 ;faktyczna iloœæ wprowadzonych znaków
- 00000144  00000080 [			bufor	DB	MBUF dup(?)
+					align	4
+ 00000228 00000000			rout	DD	0 ;faktyczna iloœæ wyprowadzonych znaków
+ 0000022C 00000000			rinp	DD	0 ;faktyczna iloœæ wprowadzonych znaków
+ 00000230 00000000			rinp2	DD	0 ;faktyczna iloœæ wprowadzonych znaków
+ 00000234  00000080 [			bufor	DB	mbuf dup(?)
 	    00
 	   ]
- 000001C4 00000080			rbuf	DD	MBUF
- 000001C8 00000000		      	zmY   DD  0
- 000001CC A638783E		      	st0   DD  10100110001110000111100000111110b 
- 000001D0			_DATA ENDS
+ 000002B4  00000080 [			bufor2	DB	mbuf dup(?)
+	    00
+	   ]
+ 00000334 00000080			rbuf	DD	mbuf
+ 00000338 00000000		    wyn   DD  0 ; zienna do przechowywania wyniku
+ 0000033C A638783E		    st0   DD  10100110001110000111100000111110b 
+ 00000340			_data ends
 				;------------
 
- 00000000			_TEXT SEGMENT
+ 00000000			_text segment
  00000000			start:
  00000000			;--- wywo³anie funkcji GetStdHandle - MAKRO
-				      PODAJDESKR STD_OUTPUT_HANDLE, hout
+					podajdeskr STD_OUTPUT_HANDLE, hout
  00000000  6A F5	     1	 push	STD_OUTPUT_HANDLE
  00000002  E8 00000000 E     1	 call	GetStdHandle
- 00000007  A3 00000000 R     1	 mov	hout,EAX 
-				      PODAJDESKR STD_INPUT_HANDLE, hinp
+ 00000007  A3 00000000 R     1	 mov	hout,eax ; deskryptor bufora konsoli
+					podajdeskr STD_INPUT_HANDLE, hinp
  0000000C  6A F6	     1	 push	STD_INPUT_HANDLE
  0000000E  E8 00000000 E     1	 call	GetStdHandle
- 00000013  A3 00000004 R     1	 mov	hinp,EAX 
+ 00000013  A3 00000004 R     1	 mov	hinp,eax ; deskryptor bufora konsoli
 				;--- nag³ówek ---------
-					PLZNAKI naglow, bufor	; konwersja polskich znaków - MAKRO
-				;--- wyœwietlenie ---------
-					INVOKE WriteConsoleA,hout,OFFSET bufor,rozmN,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
-				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				;--- zaproszenie A ---------
-					;INVOKE CharToOemA,OFFSET zaprA,OFFSET bufor	; konwersja polskich znaków
-					PLZNAKI zaprA, bufor
-				;--- wyœwietlenie zaproszenia A ---
-					WYSWIETLENIE bufor, rozmA   ; wywo³anie funkcji WriteConsoleA
+					plznaki naglow, bufor	; konwersja polskich znaków - MAKRO
+					wyswietl bufor, rozmN
+ 00000027  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000029  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000002E  FF 35 00000034 R  1	 push rozmN ; iloœæ znaków
+ 00000034  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 00000039  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 0000003F  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					plznaki temat, bufor	; konwersja polskich znaków - MAKRO
+					wyswietl bufor, rozmT
  00000053  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 00000055  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000005A  FF 35 00000058 R  1	 push rozmA ; iloœæ znaków
- 00000060  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
+ 00000055  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000005A  FF 35 00000058 R  1	 push rozmT ; iloœæ znaków
+ 00000060  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
  00000065  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
  0000006B  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmA
- 0000008D  68 00000144 R     1	 push OFFSET bufor
- 00000092  E8 000003A3	     1	 call ScanInt
- 00000097  83 C4 04	     1	 add ESP, 4
- 0000009A  A3 0000005C R     1	 mov zmA, EAX
-				;--- zaproszenie B ---------
-					PLZNAKI zaprB, bufor	; konwersja polskich znaków
-				;--- wyœwietlenie zaproszenia B ---
-					WYSWIETLENIE bufor, rozmB	; wywo³anie funkcji WriteConsoleA
- 000000AE  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 000000B0  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 000000B5  FF 35 0000008C R  1	 push rozmB ; iloœæ znaków
- 000000BB  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
- 000000C0  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
- 000000C6  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmB
- 000000E8  68 00000144 R     1	 push OFFSET bufor
- 000000ED  E8 00000348	     1	 call ScanInt
- 000000F2  83 C4 04	     1	 add ESP, 4
- 000000F5  A3 00000090 R     1	 mov zmB, EAX
-				;--- zaproszenie C ---------
-					PLZNAKI zaprC, bufor	; konwersja polskich znaków
-				;--- wyœwietlenie zaproszenia C ---
-					WYSWIETLENIE bufor, rozmC	; wywo³anie funkcji WriteConsoleA
+				;--- wyœwietlenie nowej linni---------
+					nowalinia nl
+ 00000070  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 00000072  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000077  6A 02	     1	push	2		        ; iloœæ znaków
+ 00000079  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 0000007E  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 00000084  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				;--- zaproszenie A ---------
+					plznaki zadA, bufor2
+					wyswietl bufor2, rozmzadA
+ 00000098  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 0000009A  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000009F  FF 35 0000019C R  1	 push rozmzadA ; iloœæ znaków
+ 000000A5  68 000002B4 R     1	 push offset bufor2 ; wska¿nik na tekst w buforze
+ 000000AA  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000000B0  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					;--- new line ---------
+					nowalinia nl
+ 000000B5  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 000000B7  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000000BC  6A 02	     1	push	2		        ; iloœæ znaków
+ 000000BE  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 000000C3  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 000000C9  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+					plznaki naglowA, bufor ; konwersja polskich znaków - MAKRO
+					wyswietl bufor, rozmnaglA
+ 000000DD  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 000000DF  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000000E4  FF 35 00000088 R  1	 push rozmnaglA ; iloœæ znaków
+ 000000EA  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 000000EF  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000000F5  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					plznaki zaprA, bufor
+				;--- wyœwietlenie zaproszenia A ---
+					wyswietl bufor, rozmA   ; wywo³anie funkcji WriteConsoleA
  00000109  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 0000010B  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 00000110  FF 35 000000C0 R  1	 push rozmC ; iloœæ znaków
- 00000116  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
+ 0000010B  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000110  FF 35 000000E8 R  1	 push rozmA ; iloœæ znaków
+ 00000116  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
  0000011B  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
  00000121  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmC
- 00000143  68 00000144 R     1	 push OFFSET bufor
- 00000148  E8 000002ED	     1	 call ScanInt
- 0000014D  83 C4 04	     1	 add ESP, 4
- 00000150  A3 000000C4 R     1	 mov zmC, EAX
-				;--- zaproszenie D ---------
-					PLZNAKI zaprD, bufor	; konwersja polskich znaków
-				;--- wyœwietlenie zaproszenia D ---
-					WYSWIETLENIE bufor, rozmD	; wywo³anie funkcji WriteConsoleA
+					zmienna hinp, bufor, rbuf, rinp, zmA
+ 00000143  68 00000234 R     1	 push offset bufor
+ 00000148  E8 00000472	     1	 call ScanInt
+ 0000014D  83 C4 04	     1	 add esp, 4
+ 00000150  A3 000000EC R     1	 mov zmA, eax
+				;--- zaproszenie B ---------
+					plznaki zaprB, bufor	; konwersja polskich znaków
+				;--- wyœwietlenie zaproszenia B ---
+					wyswietl bufor, rozmB	; wywo³anie funkcji WriteConsoleA
  00000164  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 00000166  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000016B  FF 35 000000F4 R  1	 push rozmD ; iloœæ znaków
- 00000171  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
+ 00000166  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000016B  FF 35 0000011C R  1	 push rozmB ; iloœæ znaków
+ 00000171  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
  00000176  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
  0000017C  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmD
- 0000019E  68 00000144 R     1	 push OFFSET bufor
- 000001A3  E8 00000292	     1	 call ScanInt
- 000001A8  83 C4 04	     1	 add ESP, 4
- 000001AB  A3 000000F8 R     1	 mov zmD, EAX
+					zmienna hinp, bufor, rbuf, rinp, zmB
+ 0000019E  68 00000234 R     1	 push offset bufor
+ 000001A3  E8 00000417	     1	 call ScanInt
+ 000001A8  83 C4 04	     1	 add esp, 4
+ 000001AB  A3 00000120 R     1	 mov zmB, eax
+				;--- zaproszenie C ---------
+					plznaki zaprC, bufor	; konwersja polskich znaków
+				;--- wyœwietlenie zaproszenia C ---
+					wyswietl bufor, rozmC	; wywo³anie funkcji WriteConsoleA
+ 000001BF  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 000001C1  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000001C6  FF 35 00000150 R  1	 push rozmC ; iloœæ znaków
+ 000001CC  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 000001D1  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000001D7  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
+					zmienna hinp, bufor, rbuf, rinp, zmC
+ 000001F9  68 00000234 R     1	 push offset bufor
+ 000001FE  E8 000003BC	     1	 call ScanInt
+ 00000203  83 C4 04	     1	 add esp, 4
+ 00000206  A3 00000154 R     1	 mov zmC, eax
+				;--- zaproszenie D ---------
+					plznaki zaprD, bufor	; konwersja polskich znaków
+				;--- wyœwietlenie zaproszenia D ---
+					wyswietl bufor, rozmD	; wywo³anie funkcji WriteConsoleA
+ 0000021A  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 0000021C  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000221  FF 35 00000184 R  1	 push rozmD ; iloœæ znaków
+ 00000227  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 0000022C  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 00000232  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
+					zmienna hinp, bufor, rbuf, rinp, zmD
+ 00000254  68 00000234 R     1	 push offset bufor
+ 00000259  E8 00000361	     1	 call ScanInt
+ 0000025E  83 C4 04	     1	 add esp, 4
+ 00000261  A3 00000188 R     1	 mov zmD, eax
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;--- obliczenia Funkcja y =a/b-c+d
- 000001B0  FF 35 000000F8 R	      push zmD
- 000001B6  FF 35 000000C4 R	      push zmC
- 000001BC  FF 35 00000090 R	      push zmB
- 000001C2  FF 35 0000005C R	      push zmA
- 000001C8  E8 00000323		      call arytm
- 000001CD  83 C4 10		      add   ESP,16
- 000001D0  A3 000001C8 R	      mov   zmY,EAX
+ 00000266  FF 35 00000188 R	      push zmD
+ 0000026C  FF 35 00000154 R	      push zmC
+ 00000272  FF 35 00000120 R	      push zmB
+ 00000278  FF 35 000000EC R	      push zmA
+ 0000027E  E8 000003F2		      call arytm
+ 00000283  83 C4 10		      add  esp, 16
+ 00000286  A3 00000338 R	      mov  wyn, eax
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;--- wyprowadzenie wyniku obliczeñ ---
-					INVOKE wsprintfA,OFFSET bufor,OFFSET wzor,zmY	; zwraca iloœæ znaków w buforze 
- 000001ED  A3 0000013C R		mov	rinp, EAX	; zapamiêtywanie iloœci znaków
-				;--- wyœwietlenie wyniku ---------
-				;--- new line ---------
-					INVOKE WriteConsoleA,hout,OFFSET newline,2,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
-				;----------------
-					INVOKE WriteConsoleA,hout,OFFSET bufor,rinp,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
+					invoke wsprintfA,OFFSET bufor,OFFSET wzorf,wyn	; zwraca iloœæ znaków w buforze 
+ 000002A3  A3 0000022C R		mov	rinp, eax	; zapamiêtywanie iloœci znaków
+					;--- new line ---------
+					nowalinia nl
+ 000002A8  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 000002AA  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000002AF  6A 02	     1	push	2		        ; iloœæ znaków
+ 000002B1  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 000002B6  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 000002BC  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+					wyswietl bufor, rinp
+ 000002C1  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 000002C3  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000002C8  FF 35 0000022C R  1	 push rinp ; iloœæ znaków
+ 000002CE  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 000002D3  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000002D9  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- wyœwietlenie nowej linni---------
+					nowalinia nl
+ 000002DE  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 000002E0  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000002E5  6A 02	     1	push	2		        ; iloœæ znaków
+ 000002E7  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 000002EC  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 000002F2  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				;--- zaproszenie A ---------
-					PLZNAKI zaprA, bufor	; konwersja polskich znaków
-				;--- wyœwietlenie zaproszenia A ---
-					WYSWIETLENIE bufor, rozmA	; wywo³anie funkcji WriteConsoleA
- 00000237  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 00000239  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000023E  FF 35 00000058 R  1	 push rozmA ; iloœæ znaków
- 00000244  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
- 00000249  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
- 0000024F  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmA
- 00000271  68 00000144 R     1	 push OFFSET bufor
- 00000276  E8 000001BF	     1	 call ScanInt
- 0000027B  83 C4 04	     1	 add ESP, 4
- 0000027E  A3 0000005C R     1	 mov zmA, EAX
 				;--- zaproszenie B ---------
-					PLZNAKI zaprB, bufor	; konwersja polskich znaków
+					plznaki zadB, bufor2
+					wyswietl bufor2, rozmzadB
+ 00000306  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000308  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000030D  FF 35 000001B0 R  1	 push rozmzadB ; iloœæ znaków
+ 00000313  68 000002B4 R     1	 push offset bufor2 ; wska¿nik na tekst w buforze
+ 00000318  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 0000031E  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					;--- wyœwietlenie nowej linni---------
+					nowalinia nl
+ 00000323  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 00000325  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000032A  6A 02	     1	push	2		        ; iloœæ znaków
+ 0000032C  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 00000331  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 00000337  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+					plznaki naglowB, bufor ; konwersja polskich znaków - MAKRO
+					wyswietl bufor, rozmnaglB ; wywo³anie funkcji WriteConsoleA
+ 0000034B  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 0000034D  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000352  FF 35 000000B8 R  1	 push rozmnaglB ; iloœæ znaków
+ 00000358  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 0000035D  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 00000363  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					plznaki zaprA, bufor	; konwersja polskich znaków
+				;--- wyœwietlenie zaproszenia A ---
+					wyswietl bufor, rozmA	; wywo³anie funkcji WriteConsoleA
+ 00000377  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000379  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000037E  FF 35 000000E8 R  1	 push rozmA ; iloœæ znaków
+ 00000384  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 00000389  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 0000038F  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
+					zmienna hinp, bufor, rbuf, rinp, zmA
+ 000003B1  68 00000234 R     1	 push offset bufor
+ 000003B6  E8 00000204	     1	 call ScanInt
+ 000003BB  83 C4 04	     1	 add esp, 4
+ 000003BE  A3 000000EC R     1	 mov zmA, eax
+				;--- zaproszenie B ---------
+					plznaki zaprB, bufor	; konwersja polskich znaków
 				;--- wyœwietlenie zaproszenia B ---
-					WYSWIETLENIE bufor, rozmB	; wywo³anie funkcji WriteConsoleA
- 00000292  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 00000294  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 00000299  FF 35 0000008C R  1	 push rozmB ; iloœæ znaków
- 0000029F  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
- 000002A4  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
- 000002AA  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					wyswietl bufor, rozmB	; wywo³anie funkcji WriteConsoleA
+ 000003D2  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 000003D4  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000003D9  FF 35 0000011C R  1	 push rozmB ; iloœæ znaków
+ 000003DF  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 000003E4  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000003EA  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmB
- 000002CC  68 00000144 R     1	 push OFFSET bufor
- 000002D1  E8 00000164	     1	 call ScanInt
- 000002D6  83 C4 04	     1	 add ESP, 4
- 000002D9  A3 00000090 R     1	 mov zmB, EAX
+					zmienna hinp, bufor, rbuf, rinp, zmB
+ 0000040C  68 00000234 R     1	 push offset bufor
+ 00000411  E8 000001A9	     1	 call ScanInt
+ 00000416  83 C4 04	     1	 add esp, 4
+ 00000419  A3 00000120 R     1	 mov zmB, eax
 				;--- zaproszenie C ---------
-					PLZNAKI zaprC, bufor	; konwersja polskich znaków
+					plznaki zaprC, bufor	; konwersja polskich znaków
 				;--- wyœwietlenie zaproszenia C ---
-					WYSWIETLENIE bufor, rozmC	; wywo³anie funkcji WriteConsoleA
- 000002ED  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 000002EF  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 000002F4  FF 35 000000C0 R  1	 push rozmC ; iloœæ znaków
- 000002FA  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
- 000002FF  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
- 00000305  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					wyswietl bufor, rozmC	; wywo³anie funkcji WriteConsoleA
+ 0000042D  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 0000042F  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000434  FF 35 00000150 R  1	 push rozmC ; iloœæ znaków
+ 0000043A  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 0000043F  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 00000445  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmC
- 00000327  68 00000144 R     1	 push OFFSET bufor
- 0000032C  E8 00000109	     1	 call ScanInt
- 00000331  83 C4 04	     1	 add ESP, 4
- 00000334  A3 000000C4 R     1	 mov zmC, EAX
+					zmienna hinp, bufor, rbuf, rinp, zmC
+ 00000467  68 00000234 R     1	 push offset bufor
+ 0000046C  E8 0000014E	     1	 call ScanInt
+ 00000471  83 C4 04	     1	 add esp, 4
+ 00000474  A3 00000154 R     1	 mov zmC, eax
 				;--- zaproszenie D ---------
-					PLZNAKI zaprD, bufor	; konwersja polskich znaków
+					plznaki zaprD, bufor	; konwersja polskich znaków
 				;--- wyœwietlenie zaproszenia D ---
-					WYSWIETLENIE bufor, rozmD	; wywo³anie funkcji WriteConsoleA
- 00000348  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
- 0000034A  68 00000138 R     1	 push OFFSET rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000034F  FF 35 000000F4 R  1	 push rozmD ; iloœæ znaków
- 00000355  68 00000144 R     1	 push OFFSET bufor ; wska¿nik na tekst w buforze
- 0000035A  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
- 00000360  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					wyswietl bufor, rozmD	; wywo³anie funkcji WriteConsoleA
+ 00000488  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 0000048A  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000048F  FF 35 00000184 R  1	 push rozmD ; iloœæ znaków
+ 00000495  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 0000049A  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000004A0  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- czekanie na wprowadzenie znaków, koniec przez Enter ---
-					ZMIENNA hinp, bufor, rbuf, rinp, zmD
- 00000382  68 00000144 R     1	 push OFFSET bufor
- 00000387  E8 000000AE	     1	 call ScanInt
- 0000038C  83 C4 04	     1	 add ESP, 4
- 0000038F  A3 000000F8 R     1	 mov zmD, EAX
+					zmienna hinp, bufor, rbuf, rinp, zmD
+ 000004C2  68 00000234 R     1	 push offset bufor
+ 000004C7  E8 000000F3	     1	 call ScanInt
+ 000004CC  83 C4 04	     1	 add esp, 4
+ 000004CF  A3 00000188 R     1	 mov zmD, eax
+					;--- new line ---------
+					nowalinia nl
+ 000004D4  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 000004D6  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000004DB  6A 02	     1	push	2		        ; iloœæ znaków
+ 000004DD  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 000004E2  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 000004E8  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;--- obliczenia Funkcja y =a#b*~c|d
-				      INVOKE logika,zmA,zmB,zmC,zmD
- 000003B1  A3 000001C8 R	      mov   zmY,EAX
+					invoke logika,zmA,zmB,zmC,zmD
+ 0000050A  83 C4 10			add   esp,16
+ 0000050D  A3 00000338 R	    mov   wyn,eax
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;--- wyprowadzenie wyniku obliczeñ ---
-					INVOKE wsprintfA,OFFSET bufor,OFFSET wzor2,zmY	; zwraca iloœæ znaków w buforze 
- 000003CE  A3 00000140 R		mov	rinp2, EAX	; zapamiêtywanie iloœci znaków
+					invoke wsprintfA,OFFSET bufor,OFFSET wzorf,wyn	; zwraca iloœæ znaków w buforze 
+ 0000052A  A3 00000230 R		mov	rinp2, eax	; zapamiêtywanie iloœci znaków
 				;--- wyœwietlenie wyniku ---------
+					wyswietl bufor, rinp2
+ 0000052F  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000531  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000536  FF 35 00000230 R  1	 push rinp2 ; iloœæ znaków
+ 0000053C  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 00000541  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 00000547  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;--- new line ---------
-					INVOKE WriteConsoleA,hout,OFFSET newline,2,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
+					nowalinia nl
+ 0000054C  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 0000054E  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000553  6A 02	     1	push	2		        ; iloœæ znaków
+ 00000555  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 0000055A  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 00000560  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
 				;----------------
-					INVOKE WriteConsoleA,hout,OFFSET bufor,rinp2,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				;--- zaproszenie C ---------
+					plznaki zadC, bufor2
+					wyswietl bufor2, rozmzadC
+ 00000574  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000576  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000057B  FF 35 000001C4 R  1	 push rozmzadC ; iloœæ znaków
+ 00000581  68 000002B4 R     1	 push offset bufor2 ; wska¿nik na tekst w buforze
+ 00000586  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 0000058C  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
 				;;;; w prawo CFc4, w lewo 2
 				;--- new line ---------
-					INVOKE WriteConsoleA,hout,OFFSET newline,2,OFFSET rout,0	; wywo³anie funkcji WriteConsoleA
-				;----------------------------
-				      INVOKE przesuw, st0
- 00000430  83 C4 04			add	ESP, 4
-				      ;;; sic!
-				      ;INVOKE DrukBin, st0
+					nowalinia nl
+ 00000591  6A 00	     1	push	0		        ; rezerwa, musi byæ zero
+ 00000593  68 00000228 R     1	push	OFFSET rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000598  6A 02	     1	push	2		        ; iloœæ znaków
+ 0000059A  68 00000008 R     1	push	OFFSET nl 	; wska¿nik na tekst
+ 0000059F  FF 35 00000000 R  1	push	hout		    ; deskryptor buforu konsoli
+ 000005A5  E8 00000000 E     1	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+					;----------------------------
+					invoke przesuwanie, st0
+ 000005B5  83 C4 10			add	esp, 16
 				;--- zakoñczenie procesu ---------
-					INVOKE ExitProcess,0	; wywo³anie funkcji ExitProcess
+					invoke ExitProcess, SYS_exit	; wywo³anie funkcji ExitProcess
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;---------Podprogramy  
- 0000043A 0000043A		ScanInt PROC C adres
-				;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez EAX
+ 000005BF 000005BF		ScanInt proc c adres
+				;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez eax
 				;; argument - zakoñczony zerem wiersz z cyframi
-				;; rejestry: EBX - adres wiersza, EDX - znak liczby, ESI - indeks cyfry w wierszu, EDI - tymczasowy
+				;; rejestry: ebx - adres wiersza, edx - znak liczby, esi - indeks cyfry w wierszu, edi - tymczasowy
 				;--- pocz¹tek funkcji
 				;--- odk³adanie na stos
- 0000043D  53				push	EBX
- 0000043E  51				push	ECX
- 0000043F  52				push	EDX
- 00000440  56				push	ESI
- 00000441  57				push	EDI
+ 000005C2  53				push	ebx
+ 000005C3  51				push	ecx
+ 000005C4  52				push	edx
+ 000005C5  56				push	esi
+ 000005C6  57				push	edi
 				;--- przygotowywanie cyklu
-					INVOKE lstrlenA, adres
- 0000044A  8B F8			mov	EDI, EAX	;iloœæ znaków
- 0000044C  8B C8			mov	ECX, EAX	;iloœæ powtórzeñ = iloœæ znaków
- 0000044E  33 F6			xor	ESI, ESI	; wyzerowanie ESI
- 00000450  33 D2			xor	EDX, EDX	; wyzerowanie EDX
- 00000452  33 C0			xor	EAX, EAX	; wyzerowanie EAX
- 00000454  8B 5D 08			mov	EBX, adres
+					invoke lstrlenA, adres
+ 000005CF  8B F8			mov	edi, eax	;iloœæ znaków
+ 000005D1  8B C8			mov	ecx, eax	;iloœæ powtórzeñ = iloœæ znaków
+ 000005D3  33 F6			xor	esi, esi	; wyzerowanie esi
+ 000005D5  33 D2			xor	edx, edx	; wyzerowanie edx
+ 000005D7  33 C0			xor	eax, eax	; wyzerowanie eax
+ 000005D9  8B 5D 08			mov	ebx, adres
 				;--- cykl  
- 00000457  80 3C 1E 2D		pocz:	cmp	BYTE PTR [EBX+ESI], 02Dh	;porównanie z kodem '-'
- 0000045B  75 07			jne	@F
- 0000045D  BA 00000001			mov	EDX, 1
- 00000462  EB 24			jmp	nast
- 00000464  80 3C 1E 30		@@:	cmp	BYTE PTR [EBX+ESI], 030h	;porównanie z kodem '0'
- 00000468  73 02			jae	@F
- 0000046A  EB 1C			jmp	nast
- 0000046C  80 3C 1E 39		@@:	cmp	BYTE PTR [EBX+ESI], 039h	;porównanie z kodem '9'
- 00000470  76 02			jbe	@F
- 00000472  EB 14			jmp	nast
+ 000005DC  80 3C 1E 2D		pocz:	cmp	BYTE PTR [ebx+esi], 02Dh	;porównanie z kodem '-'
+ 000005E0  75 07			jne	@F
+ 000005E2  BA 00000001			mov	edx, 1
+ 000005E7  EB 24			jmp	nast
+ 000005E9  80 3C 1E 30		@@:	cmp	BYTE PTR [ebx+esi], 030h	;porównanie z kodem '0'
+ 000005ED  73 02			jae	@F
+ 000005EF  EB 1C			jmp	nast
+ 000005F1  80 3C 1E 39		@@:	cmp	BYTE PTR [ebx+esi], 039h	;porównanie z kodem '9'
+ 000005F5  76 02			jbe	@F
+ 000005F7  EB 14			jmp	nast
 				;----
- 00000474  52			@@:	push	EDX	; do EDX procesor mo¿e zapisaæ wynik mno¿enia 
- 00000475  BF 0000000A			mov	EDI, 10
- 0000047A  F7 E7			mul	EDI		;mno¿enie EAX * EDI
- 0000047C  8B F8			mov	EDI, EAX	; tymczasowo z EAX do EDI
- 0000047E  33 C0			xor	EAX, EAX	;zerowani EAX
- 00000480  8A 04 1E			mov	AL, BYTE PTR [EBX+ESI]
- 00000483  2C 30			sub	AL, 030h	; korekta: cyfra = kod znaku - kod '0'	
- 00000485  03 C7			add	EAX, EDI	; dodanie cyfry
- 00000487  5A				pop	EDX
- 00000488  46			nast:	inc	ESI
- 00000489  49			      dec   ECX   
- 0000048A  74 02		      jz    @F
- 0000048C  EB C9		      jmp   pocz
+ 000005F9  52			@@:	push	edx	; do edx procesor mo¿e zapisaæ wynik mno¿enia 
+ 000005FA  BF 0000000A			mov	edi, 10
+ 000005FF  F7 E7			mul	edi		;mno¿enie eax * edi
+ 00000601  8B F8			mov	edi, eax	; tymczasowo z eax do edi
+ 00000603  33 C0			xor	eax, eax	;zerowani eax
+ 00000605  8A 04 1E			mov	AL, BYTE PTR [ebx+esi]
+ 00000608  2C 30			sub	AL, 030h	; korekta: cyfra = kod znaku - kod '0'	
+ 0000060A  03 C7			add	eax, edi	; dodanie cyfry
+ 0000060C  5A				pop	edx
+ 0000060D  46			nast:	inc	esi
+ 0000060E  49			      dec   ecx   
+ 0000060F  74 02		      jz    @F
+ 00000611  EB C9		      jmp   pocz
 				;--- wynik
- 0000048E  0B D2		@@:	or	EDX, EDX	;analiza znacznika EDX
- 00000490  74 02			jz	@F
- 00000492  F7 D8			neg	EAX
- 00000494			@@:	
+ 00000613  0B D2		@@:	or	edx, edx	;analiza znacznika edx
+ 00000615  74 02			jz	@F
+ 00000617  F7 D8			neg	eax
+ 00000619			@@:	
 				;--- zdejmowanie ze stosu
- 00000494  5F				pop	EDI
- 00000495  5E				pop	ESI
- 00000496  5A				pop	EDX
- 00000497  59				pop	ECX
- 00000498  5B				pop	EBX
+ 00000619  5F				pop	edi
+ 0000061A  5E				pop	esi
+ 0000061B  5A				pop	edx
+ 0000061C  59				pop	ecx
+ 0000061D  5B				pop	ebx
 				;--- powrót
 					ret
- 0000049B			ScanInt	ENDP
+ 00000620			ScanInt	ENDP
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 0000049B			DrukBin PROC STDCALL liczba:DWORD
+ 00000620			DrukBin proc stdcall liczba:dword
 				;; funkcja DrukBin wyswietla liczbê-argument w postaci binarnej
-				;; rejestry: ECX - cykl, EDI - maska, ESI - indeks w buforze, EBX - przesuniêcie bufora
+				;; rejestry: ecx - cykl, edi - maska, esi - indeks w buforze, ebx - przesuniêcie bufora
 				;--- odk³adanie na stos
- 0000049E  51			    push    ECX
- 0000049F  57			    push    EDI
- 000004A0  56			    push    ESI
- 000004A1  53			    push    EBX
+ 00000623  51			    push    ecx
+ 00000624  57			    push    edi
+ 00000625  56			    push    esi
+ 00000626  53			    push    ebx
 				;---
- 000004A2  B9 00000020		    mov     ECX,32
- 000004A7  BF 80000000		    mov     EDI,80000000h
- 000004AC  BE 00000000		    mov     ESI,0
- 000004B1  BB 00000144 R	    mov     EBX,OFFSET bufor
- 000004B6			et1:
- 000004B6  C6 04 1E 30		    mov     BYTE PTR [EBX+ESI],'0'
- 000004BA  85 7D 08		    test    liczba,EDI
- 000004BD  74 03		    jz      @F
- 000004BF  FE 04 1E		    inc     BYTE PTR [EBX+ESI]
- 000004C2			@@:
- 000004C2  D1 EF		    shr     EDI,1
- 000004C4  46			    inc     ESI
- 000004C5  E0 EF		    loopnz  et1       
- 000004C7  C6 43 20 0D		    mov     BYTE PTR [EBX+32],0Dh
- 000004CB  C6 43 21 0A		    mov     BYTE PTR [EBX+33],0Ah
+ 00000627  B9 00000020		    mov     ecx,32
+ 0000062C  BF 80000000		    mov     edi,80000000h
+ 00000631  BE 00000000		    mov     esi,0
+ 00000636  BB 00000234 R	    mov     ebx,OFFSET bufor
+ 0000063B			et1:
+ 0000063B  C6 04 1E 30		    mov     BYTE PTR [ebx+esi],'0'
+ 0000063F  85 7D 08		    test    liczba,edi
+ 00000642  74 03		    jz      @F
+ 00000644  FE 04 1E		    inc     BYTE PTR [ebx+esi]
+ 00000647			@@:
+ 00000647  D1 EF		    shr     edi,1
+ 00000649  46			    inc     esi
+ 0000064A  E0 EF		    loopnz  et1       
+ 0000064C  C6 43 20 0D		    mov     BYTE PTR [ebx+32],0Dh
+ 00000650  C6 43 21 0A		    mov     BYTE PTR [ebx+33],0Ah
 				;--- wyœwietlenie wyniku ---------
-				    INVOKE WriteConsoleA,hout,OFFSET bufor,34,OFFSET rout,0	
+				    invoke WriteConsoleA,hout,OFFSET bufor,34,OFFSET rout,0	
 				;--- zdejmowanie ze stosu
- 000004E8  5B			    pop     EBX
- 000004E9  5E			    pop     ESI
- 000004EA  5F			    pop     EDI
- 000004EB  59			    pop     ECX
+ 0000066D  5B			    pop     ebx
+ 0000066E  5E			    pop     esi
+ 0000066F  5F			    pop     edi
+ 00000670  59			    pop     ecx
 				;--- powrót
-				    ret     4
- 000004ED  C2 0004		DrukBin ENDP
- 000004F0			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				OPTION PROLOGUE: NONE
-				OPTION EPILOGUE: NONE
-				arytm PROC C
- 000004F0			          ;--- obliczenia Funkcja y=a/b-c+d --- 
-				          push EBP 
- 000004F0  55			          mov EBP,ESP 
- 000004F1  8B EC		          mov EAX, DWORD PTR [EBP+8] ;zmA 
- 000004F3  8B 45 08		          mov EDX,0 
- 000004F6  BA 00000000		          sub EAX, DWORD PTR [EBP+12] ;zmB 
- 000004FB  2B 45 0C		          div DWORD PTR [EBP+16] ;zmC 
- 000004FE  F7 75 10		          add EAX, DWORD PTR [EBP+20] ;zmD 
- 00000501  03 45 14		          mov ESP,EBP 
- 00000504  8B E5		          pop EBP 
- 00000506  5D			          ret 
- 00000507  C3			          arytm ENDP 
- 00000508			          
-				          ;--- obliczenia Funkcja y =a#b*~c|d --- 
-				          ;mov EAX, zmB 
-				          ;and EAX, zmC 
-				          ;mul zmC 
-				          ;mov ECX, zmD 
-				          ;not ECX 
-				          ;add ECX,2 
-				          ;and EAX,ECX 
-				          ;or EAX,zmA 
-				          ;add EAX, zmA 
-				          ;sub EAX, zmD 
-				          
-				          OPTION PROLOGUE: PROLOGUEDEF 
-				          OPTION EPILOGUE: EPILOGUEDEF
-						  logika PROTO STDCALL argA:DWORD,argB:DWORD,argC:DWORD,argD:DWORD
-						  ;logika PROC STDCALL argA:DWORD,argB:DWORD,argC:DWORD,argD:DWORD
-						  ;logika PROC STDCALL argA:DWORD,argB:DWORD,argC:DWORD,argD:DWORD
-				;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				przesuw PROC C arg:DWORD
- 00000508					INVOKE DrukBin, arg
-						shr  arg,4
- 00000513  C1 6D 08 04				INVOKE DrukBin, arg
-						rol   arg,2
- 0000051F  C1 45 08 02				INVOKE DrukBin, arg
-						ret
-				przesuw ENDP
- 0000052D			END start
-				_TEXT ENDS
-Microsoft (R) Macro Assembler Version 6.14.8444		    03/31/20 22:46:28
+				    ret     8
+ 00000672  C2 0008		DrukBin ENDP
+ 00000675			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				option prologue: none
+				option epilogue: none
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				arytm proc c
+ 00000675			;--- obliczenia A / B - C + D 
+					push ebp 
+ 00000675  55				mov ebp, esp 
+ 00000676  8B EC			mov edx, 0					; zerowanie edx
+ 00000678  BA 00000000			mov eax, 0          		; zerowanie eax
+ 0000067D  B8 00000000			mov eax, dword ptr [ebp+8] 	; zm A do eax
+ 00000682  8B 45 08			div dword ptr [ebp+12]		; dzielenie  A / B wynik w eax
+ 00000685  F7 75 0C			mov edx, dword ptr [ebp+16] ; zmienna C do edx
+ 00000688  8B 55 10			sub eax, edx				; odejumjemy od wyniku dzielenia C, wynik w eax
+ 0000068B  2B C2			add eax, dword ptr [ebp+20]	; dodajemy do eax zmienn¹ D, wynik w eax
+ 0000068D  03 45 14			mov edx, 0          		; sprz¹tanie, zerowanie edx
+ 00000690  BA 00000000			mov esp,ebp 
+ 00000695  8B E5			pop ebp 
+ 00000697  5D				ret 8 ;ominiêcie ramki stosu z parametrami 
+ 00000698  C2 0008		arytm endp 
+ 0000069B			;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				option prologue: prologuedef
+				option epilogue: epiloguedef
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+				logika proc stdcall argA:dword,argB:dword,argC:dword,argD:dword       
+ 0000069B			;--- obliczenia a # b * ~c | d
+				;--- kolejnoœæ ~ * | #
+					push ebp ;przechowywanie ebp na stosie
+ 0000069E  55				mov ebp, esp ;zamiana ebp
+ 0000069F  8B EC			mov eax, 0 			; zerowanie eax
+ 000006A1  B8 00000000			mov eax, zmC		; c do eax
+ 000006A6  A1 00000154 R		not eax				; negacja bitowa eax (c)
+ 000006AB  F7 D0			add eax, 2			; korekta wyniku negacji
+ 000006AD  83 C0 02			and eax, zmB		; mno¿enie logiczne b * ~c
+ 000006B0  23 05 00000120 R		or  eax, zmD			; wynik mno¿enia logicznego or (|) d
+ 000006B6  0B 05 00000188 R		xor eax, zmA
+ 000006BC  33 05 000000EC R		mov esp, ebp ;zamiana esp
+ 000006C2  8B E5			pop ebp ;przewrócenie ebp ze stosu
+ 000006C4  5D				ret 8 ;ominiêcie ramki stosu z parametrami 
+				logika endp
+ 000006C6  C2 0008		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 000006C9			przesuwanie proc stdcall arg:dword
+					push ebp
+ 000006C9				mov ebp, esp
+ 000006CC  55				plznaki rot1, bufor
+ 000006CD  8B EC			wyswietl bufor, rozmrot1
+					invoke DrukBin, st0
+					mov eax, 0
+ 000006DE  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 000006E0  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000006E5  FF 35 000001DC R  1	 push rozmrot1 ; iloœæ znaków
+ 000006EB  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 000006F0  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 000006F6  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					mov eax, st0
+ 00000706  B8 00000000			rcr eax, 4
+ 0000070B  A1 0000033C R		mov st0, eax
+ 00000710  C1 D8 04			plznaki rot2, bufor
+ 00000713  A3 0000033C R		wyswietl bufor, rozmrot2
+					invoke DrukBin, st0
+					mov eax, 0
+ 00000727  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000729  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000072E  FF 35 000001F4 R  1	 push rozmrot2 ; iloœæ znaków
+ 00000734  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 00000739  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 0000073F  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					mov eax, st0
+ 0000074F  B8 00000000			rol eax, 2
+ 00000754  A1 0000033C R		mov st0, eax
+ 00000759  C1 C0 02			plznaki rot3, bufor
+ 0000075C  A3 0000033C R		wyswietl bufor, rozmrot3
+					invoke DrukBin, st0
+					mov esp, ebp ;zamiana esp
+ 00000770  6A 00	     1	 push 0 ; rezerwa, musi byæ zero
+ 00000772  68 00000228 R     1	 push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000777  FF 35 0000020C R  1	 push rozmrot3 ; iloœæ znaków
+ 0000077D  68 00000234 R     1	 push offset bufor ; wska¿nik na tekst w buforze
+ 00000782  FF 35 00000000 R  1	 push hout ; deskryptor buforu konsoli
+ 00000788  E8 00000000 E     1	 call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+					pop ebp ;przewrócenie ebp ze stosu
+ 00000798  8B E5			ret 8 ;ominiêcie ramki stosu z parametrami
+ 0000079A  5D			przesuwanie endp
+				end start
+ 0000079C  C2 0008		_text ends
+ 0000079F
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/17/20 01:34:08
 .\cw5\cw5.asm						     Symbols 2 - 1
 
 
@@ -486,10 +729,11 @@ Macros:
 
                 N a m e                 Type
 
-PLZNAKI  . . . . . . . . . . . .	Proc
-PODAJDESKR . . . . . . . . . . .	Proc
-WYSWIETLENIE . . . . . . . . . .	Proc
-ZMIENNA  . . . . . . . . . . . .	Proc
+nowalinia  . . . . . . . . . . .	Proc
+plznaki  . . . . . . . . . . . .	Proc
+podajdeskr . . . . . . . . . . .	Proc
+wyswietl . . . . . . . . . . . .	Proc
+zmienna  . . . . . . . . . . . .	Proc
 
 
 Segments and Groups:
@@ -497,31 +741,35 @@ Segments and Groups:
                 N a m e                 Size     Length   Align   Combine Class
 
 FLAT . . . . . . . . . . . . . .	GROUP
-_DATA  . . . . . . . . . . . . .	32 Bit	 000001D0 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 0000052D Para	  Public  'CODE'	
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000340 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 0000079F Para	  Public  'CODE'	
 
 
 Procedures,  parameters and locals:
 
                 N a m e                 Type     Value    Attr
 
-$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 0000043A Private STDCALL
+$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000005BF Private STDCALL
 CharToOemA . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-DrukBin  . . . . . . . . . . . .	P Near	 0000049B _TEXT	Length= 00000055 Public STDCALL
+DrukBin  . . . . . . . . . . . .	P Near	 00000620 _TEXT	Length= 00000055 Public STDCALL
   liczba . . . . . . . . . . . .	DWord	 bp + 00000008
-  et1  . . . . . . . . . . . . .	L Near	 000004B6 _TEXT	
+  et1  . . . . . . . . . . . . .	L Near	 0000063B _TEXT	
 ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-ScanInt  . . . . . . . . . . . .	P Near	 0000043A _TEXT	Length= 00000061 Public C
+ScanInt  . . . . . . . . . . . .	P Near	 000005BF _TEXT	Length= 00000061 Public C
   adres  . . . . . . . . . . . .	DWord	 bp + 00000008
-  pocz . . . . . . . . . . . . .	L Near	 00000457 _TEXT	
-  nast . . . . . . . . . . . . .	L Near	 00000488 _TEXT	
+  pocz . . . . . . . . . . . . .	L Near	 000005DC _TEXT	
+  nast . . . . . . . . . . . . .	L Near	 0000060D _TEXT	
 WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-arytm  . . . . . . . . . . . . .	P Near	 000004F0 _TEXT	Length= 00000018 Public C
-logika . . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+arytm  . . . . . . . . . . . . .	P Near	 00000675 _TEXT	Length= 00000026 Public C
+logika . . . . . . . . . . . . .	P Near	 0000069B _TEXT	Length= 0000002E Public STDCALL
+  argA . . . . . . . . . . . . .	DWord	 bp + 00000008
+  argB . . . . . . . . . . . . .	DWord	 bp + 0000000C
+  argC . . . . . . . . . . . . .	DWord	 bp + 00000010
+  argD . . . . . . . . . . . . .	DWord	 bp + 00000014
 lstrlenA . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-przesuw  . . . . . . . . . . . .	P Near	 00000508 _TEXT	Length= 00000025 Public C
+przesuwanie  . . . . . . . . . .	P Near	 000006C9 _TEXT	Length= 000000D6 Public STDCALL
   arg  . . . . . . . . . . . . .	DWord	 bp + 00000008
 wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
 
@@ -539,36 +787,55 @@ Symbols:
 @fardata?  . . . . . . . . . . .	Text   	 FLAT
 @fardata . . . . . . . . . . . .	Text   	 FLAT
 @stack . . . . . . . . . . . . .	Text   	 FLAT
-MBUF . . . . . . . . . . . . . .	Number	 00000080h   
 STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
 STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
-bufor  . . . . . . . . . . . . .	Byte	 00000144 _DATA	
+SYS_exit . . . . . . . . . . . .	Number	 00000000h   
+bufor2 . . . . . . . . . . . . .	Byte	 000002B4 _DATA	
+bufor  . . . . . . . . . . . . .	Byte	 00000234 _DATA	
 hinp . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
 hout . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
-naglow . . . . . . . . . . . . .	Byte	 00000008 _DATA	
-newline  . . . . . . . . . . . .	Byte	 00000134 _DATA	
-rbuf . . . . . . . . . . . . . .	DWord	 000001C4 _DATA	
-rinp2  . . . . . . . . . . . . .	DWord	 00000140 _DATA	
-rinp . . . . . . . . . . . . . .	DWord	 0000013C _DATA	
-rout . . . . . . . . . . . . . .	DWord	 00000138 _DATA	
-rozmA  . . . . . . . . . . . . .	DWord	 00000058 _DATA	
-rozmB  . . . . . . . . . . . . .	DWord	 0000008C _DATA	
-rozmC  . . . . . . . . . . . . .	DWord	 000000C0 _DATA	
-rozmD  . . . . . . . . . . . . .	DWord	 000000F4 _DATA	
-rozmN  . . . . . . . . . . . . .	DWord	 00000028 _DATA	
-st0  . . . . . . . . . . . . . .	DWord	 000001CC _DATA	
+mbuf . . . . . . . . . . . . . .	Number	 00000080h   
+naglowA  . . . . . . . . . . . .	Byte	 0000005C _DATA	
+naglowB  . . . . . . . . . . . .	Byte	 0000008C _DATA	
+naglow . . . . . . . . . . . . .	Byte	 0000000C _DATA	
+nl . . . . . . . . . . . . . . .	Byte	 00000008 _DATA	
+rbuf . . . . . . . . . . . . . .	DWord	 00000334 _DATA	
+rinp2  . . . . . . . . . . . . .	DWord	 00000230 _DATA	
+rinp . . . . . . . . . . . . . .	DWord	 0000022C _DATA	
+rot1 . . . . . . . . . . . . . .	Byte	 000001C8 _DATA	
+rot2 . . . . . . . . . . . . . .	Byte	 000001E0 _DATA	
+rot3 . . . . . . . . . . . . . .	Byte	 000001F8 _DATA	
+rout . . . . . . . . . . . . . .	DWord	 00000228 _DATA	
+rozmA  . . . . . . . . . . . . .	DWord	 000000E8 _DATA	
+rozmB  . . . . . . . . . . . . .	DWord	 0000011C _DATA	
+rozmC  . . . . . . . . . . . . .	DWord	 00000150 _DATA	
+rozmD  . . . . . . . . . . . . .	DWord	 00000184 _DATA	
+rozmN  . . . . . . . . . . . . .	DWord	 00000034 _DATA	
+rozmT  . . . . . . . . . . . . .	DWord	 00000058 _DATA	
+rozmnaglA  . . . . . . . . . . .	DWord	 00000088 _DATA	
+rozmnaglB  . . . . . . . . . . .	DWord	 000000B8 _DATA	
+rozmrot1 . . . . . . . . . . . .	DWord	 000001DC _DATA	
+rozmrot2 . . . . . . . . . . . .	DWord	 000001F4 _DATA	
+rozmrot3 . . . . . . . . . . . .	DWord	 0000020C _DATA	
+rozmzadA . . . . . . . . . . . .	DWord	 0000019C _DATA	
+rozmzadB . . . . . . . . . . . .	DWord	 000001B0 _DATA	
+rozmzadC . . . . . . . . . . . .	DWord	 000001C4 _DATA	
+st0  . . . . . . . . . . . . . .	DWord	 0000033C _DATA	
 start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
-wzor2  . . . . . . . . . . . . .	Byte	 00000118 _DATA	
-wzor . . . . . . . . . . . . . .	Byte	 000000FC _DATA	
-zaprA  . . . . . . . . . . . . .	Byte	 0000002C _DATA	
-zaprB  . . . . . . . . . . . . .	Byte	 00000060 _DATA	
-zaprC  . . . . . . . . . . . . .	Byte	 00000094 _DATA	
-zaprD  . . . . . . . . . . . . .	Byte	 000000C8 _DATA	
-zmA  . . . . . . . . . . . . . .	DWord	 0000005C _DATA	
-zmB  . . . . . . . . . . . . . .	DWord	 00000090 _DATA	
-zmC  . . . . . . . . . . . . . .	DWord	 000000C4 _DATA	
-zmD  . . . . . . . . . . . . . .	DWord	 000000F8 _DATA	
-zmY  . . . . . . . . . . . . . .	DWord	 000001C8 _DATA	
+temat  . . . . . . . . . . . . .	Byte	 00000038 _DATA	
+wyn  . . . . . . . . . . . . . .	DWord	 00000338 _DATA	
+wzorf  . . . . . . . . . . . . .	Byte	 00000210 _DATA	
+zadA . . . . . . . . . . . . . .	Byte	 0000018C _DATA	
+zadB . . . . . . . . . . . . . .	Byte	 000001A0 _DATA	
+zadC . . . . . . . . . . . . . .	Byte	 000001B4 _DATA	
+zaprA  . . . . . . . . . . . . .	Byte	 000000BC _DATA	
+zaprB  . . . . . . . . . . . . .	Byte	 000000F0 _DATA	
+zaprC  . . . . . . . . . . . . .	Byte	 00000124 _DATA	
+zaprD  . . . . . . . . . . . . .	Byte	 00000158 _DATA	
+zmA  . . . . . . . . . . . . . .	DWord	 000000EC _DATA	
+zmB  . . . . . . . . . . . . . .	DWord	 00000120 _DATA	
+zmC  . . . . . . . . . . . . . .	DWord	 00000154 _DATA	
+zmD  . . . . . . . . . . . . . .	DWord	 00000188 _DATA	
 
 	   0 Warnings
 	   0 Errors

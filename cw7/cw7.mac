@@ -1,26 +1,39 @@
 ;-------------------------------------------|
-;				  cw7.mac             |
+;				  cw7.mac                   |
 ;      Operacje na plikach i katalogach.    |
+;            Makro do opisu zadañ           |
 ;                ver 1.0                    |
 ;	               Autor: Grzegorz Makowski |
 ;                  MASM ver: 6.14.8444      |
-;                  ost. akt. 28.04.2020     |
+;                  ost. akt. 29.04.2020     |
 ;-------------------------------------------|
 ;-------------------------------------------|
-;           Makro do opisu zadañ            |
+;              Wyswietlenie nag³ówka        |
 ;-------------------------------------------|
-zadA macro 
-plznaki naglow, buf ; konwersja - MAKRO
+Naglowek macro 
+;--- wywo³anie funkcji GetStdHandle 
+podajdeskr STD_OUTPUT_HANDLE, hout
+plznaki naglow, buf ; konwersja 
 ;--- wyœwietlenie  powitania ---------
-wyswietl buf, rozmN ; wyswietlenie - MAKRO
-nowalinia nl, 2		; nowa linia - MAKRO
-nowalinia nl, 2		; nowa linia - MAKRO
-;--- wywietlenie tekstu Zadanie a ----
-plznaki zadanieA, buff		; MAKRO
-wyswietl buff, rozmA		; wyswietlenie - MAKRO
-nowalinia nl, 2		; nowa linia - MAKRO
+wyswietl buf, rozmN ; wyswietlenie
+nowalinia nl, 2		; nowa linia 
+nowalinia nl, 2		; nowa linia 
 endm
-
+;-------------------------------------------|
+;         Wyswietlenie zadania a            |
+;-------------------------------------------|
+zadA macro
+;--- wywietlenie tekstu Zadanie a ----
+plznaki zadanieA, buff		;
+wyswietl buff, rozmA		; wyswietlenie -
+nowalinia nl, 2		; nowa linia - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+plznaki opisKatZadA, buf		; MAKRO 
+wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania 
+endm
+;-------------------------------------------|
+;         Wyswietlenie zadania b            |
+;-------------------------------------------|
 zadB macro 
 plznaki zadanieB, buff
 wyswietl buff, rozmB

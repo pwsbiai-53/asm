@@ -143,19 +143,18 @@ zadanieB db "Zadanie b",0
 align 4
 rozmB dd $ - zadanieB ; ilosc znakow tekstu zadanieB
 align 4
-opisKatZadB db "Œciezki do plików: test1.txt i test2.txt",0
+opisKatZadB db "Œciezki do plików: plik1.txt i plik2.txt",0
 align 4
 rozmkatzadB dd $ - opisKatZadB ; ilosc znakow w opisie zadania a
 align 4
 rout dd 0
 sciezka db mbuf dup(?)
-lenDANE dd 0
 nazwaDANE db "\DANE",0
 nazwa db "\test.txt",0
-nazwa1 db "\test1.txt",0
-nazwa2 db "\test2.txt",0
-nazwat1 db 13,10,"Dane z test1.txt - co 8 nieparzysta:",13,10,0
-nazwat2 db 13,10,"Dane z test2.txt - co 8 parzysta:",13,10,0
+nazwa1 db "\plik1.txt",0
+nazwa2 db "\plik2.txt",0
+nazwat1 db 13,10,"Dane z plik1.txt - co 8 nieparzysta:",13,10,0
+nazwat2 db 13,10,"Dane z plik2.txt - co 8 parzysta:",13,10,0
 tesTxt db mbuf dup(?)	; bufor na sciezke dla pliku test.txt
 tesTxt1 db mbuf dup(?)	; bufor na sciezke dla pliku test1.txt
 tesTxt2 db mbuf dup(?)	; bufor na sciezke dla pliku test2.txt
@@ -185,24 +184,16 @@ _data ends
 ;----------------------------------------|
 _text segment
 start:
-;--- wywo³anie funkcji GetStdHandle - MAKRO
-podajdeskr STD_OUTPUT_HANDLE, hout		; MAKRO
 ;--- nag³ówek ---------
+Naglowek ; Makro
+;---
 zadA ; Makro
-;---
-invoke GetCurrentDirectoryA, mbuf, offset sciezka ; pobranie pe³nej œcie¿ki
 nowalinia nl, 2		; MAKRO
-;---
+invoke GetCurrentDirectoryA, mbuf, offset sciezka ; pobranie pe³nej œcie¿ki
 invoke lstrcpyA, offset katDane, offset sciezka ; ³aczenie stringow
 invoke lstrcatA, offset katDane, offset nazwaDANE
 invoke lstrlenA, offset katDane
-mov lenDANE,eax
 mov leng, eax
-;--- 
-plznaki opisKatZadA, buf		; MAKRO 
-wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania - MAKRO
-;--- nowa linia
-nowalinia nl, 2		; nowa linia - MAKRO
 wyswietl offset katDane, leng ; wyswietlenie pe³nego katalogu DANE - MAKRO
 ;--- nowa linia
 nowalinia nl, 2		; nowa linia - MAKRO
@@ -215,11 +206,10 @@ mov leng, eax
 wyswietl offset tesTxt, leng ; MAKRO - wyswietlenie sciezki do pliku test.txt
 ;-- nowa linia
 nowalinia nl, 2		; nowa linia - MAKRO
-;---
 invoke CreateFileA, offset tesTxt,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; tworzenie pliku
 mov hfile, eax
 ;---
-invoke CloseHandle, hfile
+invoke CloseHandle, hfile ; zamkniecie pliku test
 ;--- liczby pseudolosowe -> tablica
 lea ebx, tab
 mov edi, 0
@@ -241,7 +231,6 @@ loop losowe
 ;------------------------------|
 ;--- nowa linia
 nowalinia nxt,2     ; nowa linia
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 invoke CreateFileA, offset tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
 mov hfile, eax
 ;-- z tablicy do pliku ----
@@ -259,7 +248,6 @@ pop ecx
 loop powt
 ;;;
 invoke CloseHandle, hfile
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;-- pobranie z tablicy na ekran po 10 liczb na wierszu ----
 lea ebx, tab
 mov ecx, 100
@@ -304,8 +292,6 @@ invoke lstrcatA, offset tesTxt1, offset nazwa1
 invoke lstrlenA, offset tesTxt1
 mov leng, eax
 wyswietl offset tesTxt1, leng ; wyswietlenie 
-;invoke WriteConsoleA, hout, offset tesTxt1, leng , offset rout , 0
-;invoke WriteConsoleA, hout, offset nastwiersz, 2 , offset rout , 0
 nowalinia nxt,2     ; nowa linia
 invoke CreateFileA, offset tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
 mov hfile1, eax
@@ -314,8 +300,6 @@ invoke lstrcatA, offset tesTxt2, offset nazwa2
 invoke lstrlenA, offset tesTxt2
 mov leng, eax
 wyswietl offset tesTxt2, leng
-;invoke WriteConsoleA, hout, offset tesTxt2, leng , offset rout , 0
-;invoke WriteConsoleA, hout, offset nastwiersz, 2 , offset rout , 0
 nowalinia nxt,2     ; nowa linia
 invoke CreateFileA, offset tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
 mov hfile2, eax

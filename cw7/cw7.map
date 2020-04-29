@@ -1,11 +1,11 @@
  cw7
 
- Timestamp is 5ea95349 (Wed Apr 29 12:13:29 2020)
+ Timestamp is 5ea960d9 (Wed Apr 29 13:11:21 2020)
 
  Preferred load address is 00400000
 
  Start         Length     Name                   Class
- 0001:00000000 000009d5H .text                   CODE
+ 0001:00000000 00000915H .text                   CODE
  0002:00000000 00000040H .idata$5                DATA
  0002:00000040 00000028H .idata$2                DATA
  0002:00000068 00000014H .idata$3                DATA
@@ -17,23 +17,23 @@
   Address         Publics by Value              Rva+Base     Lib:Object
 
  0001:00000000       _start                     00401000 f   cw7.obj
- 0001:000008c1       _ScanInt                   004018c1 f   cw7.obj
- 0001:00000922       _CharToOemA@8              00401922 f   user32:user32.dll
- 0001:00000928       _wsprintfA                 00401928 f   user32:user32.dll
- 0001:0000092e       _GetStdHandle@4            0040192e f   kernel32:kernel32.dll
- 0001:00000934       _WriteConsoleA@20          00401934 f   kernel32:kernel32.dll
- 0001:0000093a       _ExitProcess@4             0040193a f   kernel32:kernel32.dll
- 0001:00000940       _lstrlenA@4                00401940 f   kernel32:kernel32.dll
- 0001:00000946       _GetCurrentDirectoryA@8    00401946 f   kernel32:kernel32.dll
- 0001:0000094c       _CreateDirectoryA@8        0040194c f   kernel32:kernel32.dll
- 0001:00000952       _lstrcatA@8                00401952 f   kernel32:kernel32.dll
- 0001:00000958       _CreateFileA@28            00401958 f   kernel32:kernel32.dll
- 0001:0000095e       _lstrcpyA@8                0040195e f   kernel32:kernel32.dll
- 0001:00000964       _CloseHandle@4             00401964 f   kernel32:kernel32.dll
- 0001:0000096a       _WriteFile@20              0040196a f   kernel32:kernel32.dll
- 0001:00000970       _ReadFile@20               00401970 f   kernel32:kernel32.dll
- 0001:00000980       _nrandom@4                 00401980 f   masm32:nrand.obj
- 0001:000009c6       _nseed@4                   004019c6 f   masm32:nrand.obj
+ 0001:00000805       _ScanInt                   00401805 f   cw7.obj
+ 0001:00000866       _CharToOemA@8              00401866 f   user32:user32.dll
+ 0001:0000086c       _wsprintfA                 0040186c f   user32:user32.dll
+ 0001:00000872       _GetStdHandle@4            00401872 f   kernel32:kernel32.dll
+ 0001:00000878       _WriteConsoleA@20          00401878 f   kernel32:kernel32.dll
+ 0001:0000087e       _ExitProcess@4             0040187e f   kernel32:kernel32.dll
+ 0001:00000884       _lstrlenA@4                00401884 f   kernel32:kernel32.dll
+ 0001:0000088a       _GetCurrentDirectoryA@8    0040188a f   kernel32:kernel32.dll
+ 0001:00000890       _CreateDirectoryA@8        00401890 f   kernel32:kernel32.dll
+ 0001:00000896       _lstrcatA@8                00401896 f   kernel32:kernel32.dll
+ 0001:0000089c       _CreateFileA@28            0040189c f   kernel32:kernel32.dll
+ 0001:000008a2       _lstrcpyA@8                004018a2 f   kernel32:kernel32.dll
+ 0001:000008a8       _CloseHandle@4             004018a8 f   kernel32:kernel32.dll
+ 0001:000008ae       _WriteFile@20              004018ae f   kernel32:kernel32.dll
+ 0001:000008b4       _ReadFile@20               004018b4 f   kernel32:kernel32.dll
+ 0001:000008c0       _nrandom@4                 004018c0 f   masm32:nrand.obj
+ 0001:00000906       _nseed@4                   00401906 f   masm32:nrand.obj
  0002:00000000       __imp__CreateDirectoryA@8  00402000     kernel32:kernel32.dll
  0002:00000004       __imp__ReadFile@20         00402004     kernel32:kernel32.dll
  0002:00000008       __imp__WriteFile@20        00402008     kernel32:kernel32.dll
@@ -59,17 +59,17 @@
  Static symbols
 
  0001:00000000       _$$$00001@0                00401000 f   cw7.obj
- 0001:000008ba       kon                        004018ba f   cw7.obj
- 0001:000006ab       dalej                      004016ab f   cw7.obj
- 0001:000008de       pocz                       004018de f   cw7.obj
- 0001:0000090f       nast                       0040190f f   cw7.obj
- 0001:000006b5       zamyk                      004016b5 f   cw7.obj
- 0001:000002cb       powt                       004012cb f   cw7.obj
+ 0001:000007fe       kon                        004017fe f   cw7.obj
+ 0001:000005ef       dalej                      004015ef f   cw7.obj
+ 0001:00000822       pocz                       00401822 f   cw7.obj
+ 0001:00000853       nast                       00401853 f   cw7.obj
+ 0001:000005f9       zamyk                      004015f9 f   cw7.obj
+ 0001:000002b2       powt                       004012b2 f   cw7.obj
  0001:0000022c       losowe                     0040122c f   cw7.obj
- 0001:0000032a       powtE                      0040132a f   cw7.obj
- 0001:000005b4       powt2                      004015b4 f   cw7.obj
- 0001:00000654       parz                       00401654 f   cw7.obj
- 0001:0000072a       powtE1                     0040172a f   cw7.obj
- 0001:000007a4       zamyk1                     004017a4 f   cw7.obj
- 0001:0000081c       powtE2                     0040181c f   cw7.obj
- 0001:00000896       zamyk2                     00401896 f   cw7.obj
+ 0001:00000311       powtE                      00401311 f   cw7.obj
+ 0001:000004f8       powt2                      004014f8 f   cw7.obj
+ 0001:00000598       parz                       00401598 f   cw7.obj
+ 0001:0000066e       powtE1                     0040166e f   cw7.obj
+ 0001:000006e8       zamyk1                     004016e8 f   cw7.obj
+ 0001:00000760       powtE2                     00401760 f   cw7.obj
+ 0001:000007da       zamyk2                     004017da f   cw7.obj

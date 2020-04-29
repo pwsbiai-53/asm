@@ -1,4 +1,4 @@
-Microsoft (R) Macro Assembler Version 6.14.8444		    04/29/20 12:13:28
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/29/20 13:11:21
 .\cw7\cw7.asm						     Page 1 - 1
 
 
@@ -453,412 +453,288 @@ Microsoft (R) Macro Assembler Version 6.14.8444		    04/29/20 12:13:28
 				;       plik "test.txt"        |
 				;------------------------------|
 				;--- nowa linia
-				nowalinia nl,2
- 00000244  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 00000246  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 0000024B  6A 02	     1		push	2		        ; iloœæ znaków
- 0000024D  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000252  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 00000258  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				plznaki opisKatZadA2, buf ; konwersja pl nazkow
-				wyswietl buf, rozmkatzada2 ; wyswietenie opisu tabeli
- 0000026C  6A 00	     1		push 0 ; rezerwa, musi byæ zero
- 0000026E  68 000000E8 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 00000273  FF 35 000000A4 R  1		push rozmkatzada2 ; iloœæ znaków
- 00000279  68 00000F1E R     1		push offset buf ; wska¿nik na tekst w buforze
- 0000027E  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
- 00000284  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;--- nowa linia
-				nowalinia nl,2
- 00000289  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 0000028B  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 00000290  6A 02	     1		push	2		        ; iloœæ znaków
- 00000292  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000297  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 0000029D  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				INVOKE lstrlenA, OFFSET tesTxt
+ 0000024E  A3 00000F1A R	mov leng, EAX
+				INVOKE WriteConsoleA, hout, OFFSET tesTxt, leng , OFFSET rout , 0
+				INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				invoke CreateFileA, offset tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
- 000002BB  A3 00000B6B R	mov hfile, eax
+				INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
+ 000002A2  A3 00000B6B R	mov hfile, EAX
 				;-- z tablicy do pliku ----
- 000002C0  8D 1D 00000B77 R	lea ebx, tab
- 000002C6  B9 00000064		mov ecx, 100
- 000002CB			powt:
- 000002CB  51			push ecx
- 000002CC  53			push ebx
-				invoke wsprintfA,offset buf,offset format1,dword ptr [ebx]
- 000002E1  A3 0000132C R	mov rsymb,eax
-				invoke WriteFile, hfile, offset buf ,rsymb , offset nbytes, 0
- 00000303  5B			pop ebx
- 00000304  83 C3 04		add ebx, 4
- 00000307  59			pop ecx
- 00000308  E2 C1		loop powt
+ 000002A7  8D 1D 00000B77 R	lea EBX, tab
+ 000002AD  B9 00000064		mov ECX, 100
+ 000002B2			powt:
+ 000002B2  51			push ECX
+ 000002B3  53			push EBX
+				INVOKE wsprintfA,OFFSET buf,OFFSET format1,DWORD PTR [EBX]
+ 000002C8  A3 0000132C R	mov rsymb,EAX
+				INVOKE WriteFile, hfile, OFFSET buf ,rsymb , OFFSET nbytes, 0
+ 000002EA  5B			pop EBX
+ 000002EB  83 C3 04		add EBX, 4
+ 000002EE  59			pop ECX
+ 000002EF  E2 C1		loop powt
 				;;;
-				invoke CloseHandle, hfile
+				INVOKE CloseHandle, hfile
+				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 				;-- pobranie z tablicy na ekran po 10 liczb na wierszu ----
- 00000315  8D 1D 00000B77 R	lea ebx, tab
- 0000031B  B9 00000064		mov ecx, 100
- 00000320  C7 05 00000D0F R	mov licznik1,0
+ 000002FC  8D 1D 00000B77 R	lea EBX, tab
+ 00000302  B9 00000064		mov ECX, 100
+ 00000307  C7 05 00000D0F R	mov licznik1,0
 	   00000000
- 0000032A			powtE:
- 0000032A  51			push ecx
- 0000032B  53			push ebx
- 0000032C  A1 00000D0F R	mov eax,licznik1
- 00000331  0B C0		or eax,eax
- 00000333  75 19		jnz @F
-				;--- nowa line ---------
-				nowalinia nl,2 ; wywo³anie MAKRA
- 00000335  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 00000337  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 0000033C  6A 02	     1		push	2		        ; iloœæ znaków
- 0000033E  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000343  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 00000349  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
- 0000034E			@@:
- 0000034E  FF 05 00000D0F R	inc licznik1
- 00000354  83 3D 00000D0F R	cmp licznik1,10
-	   0A
- 0000035B  72 0A		jb @F
- 0000035D  C7 05 00000D0F R	mov licznik1,0
-	   00000000
- 00000367			@@:
- 00000367  5B			pop ebx
- 00000368  53			push ebx
-				invoke wsprintfA,offset buf,offset format2,dword ptr [ebx]
- 0000037D  A3 0000132C R	mov rsymb,eax
-				invoke WriteConsoleA, hout, offset buf ,rsymb , offset nbytes, 0
+ 00000311			powtE:
+ 00000311  51			push ECX ;;
+ 00000312  53			push EBX
 				;;;
- 0000039F  5B			pop ebx
- 000003A0  83 C3 04		add ebx, 4
- 000003A3  59			pop ecx
- 000003A4  E2 84		loop powtE
-				nowalinia nl,2 ; wywo³anie MAKRA
- 000003A6  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000003A8  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000003AD  6A 02	     1		push	2		        ; iloœæ znaków
- 000003AF  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000003B4  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000003BA  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				nowalinia nl,2 ; wywo³anie MAKRA
- 000003BF  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000003C1  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000003C6  6A 02	     1		push	2		        ; iloœæ znaków
- 000003C8  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000003CD  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000003D3  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-
-				;----------------------------------|
-				;     operacje na plikach          |
-				;----------------------------------|
-				;-- Zadanie b
-				;--- Wyœwietlenie zaprosznie i opisów
-				nowalinia nl, 2
- 000003D8  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000003DA  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000003DF  6A 02	     1		push	2		        ; iloœæ znaków
- 000003E1  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000003E6  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000003EC  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				plznaki zadanieB,buff ; konwersja 
-				wyswietl buff, rozmB 
- 00000400  6A 00	     1		push 0 ; rezerwa, musi byæ zero
- 00000402  68 000000E8 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 00000407  FF 35 000000B4 R  1		push rozmB ; iloœæ znaków
- 0000040D  68 0000111E R     1		push offset buff ; wska¿nik na tekst w buforze
- 00000412  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
- 00000418  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				nowalinia nl, 2
- 0000041D  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 0000041F  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 00000424  6A 02	     1		push	2		        ; iloœæ znaków
- 00000426  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 0000042B  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 00000431  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				plznaki opisKatZadB, buf
-				wyswietl buf, rozmkatzadB
- 00000445  6A 00	     1		push 0 ; rezerwa, musi byæ zero
- 00000447  68 000000E8 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000044C  FF 35 000000E4 R  1		push rozmkatzadB ; iloœæ znaków
- 00000452  68 00000F1E R     1		push offset buf ; wska¿nik na tekst w buforze
- 00000457  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
- 0000045D  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				nowalinia nl, 2
- 00000462  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 00000464  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 00000469  6A 02	     1		push	2		        ; iloœæ znaków
- 0000046B  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000470  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 00000476  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				;----------------
-				invoke CreateFileA, offset tesTxt,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test.txt
- 00000494  A3 00000B6B R	mov hfile, eax
-				invoke lstrcpyA, offset tesTxt1, offset katDane
-				invoke lstrcatA, offset tesTxt1, offset nazwa1
-				invoke lstrlenA, offset tesTxt1
- 000004C1  A3 00000F1A R	mov leng, eax
-				wyswietl offset tesTxt1, leng 
- 000004C6  6A 00	     1		push 0 ; rezerwa, musi byæ zero
- 000004C8  68 000000E8 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 000004CD  FF 35 00000F1A R  1		push leng ; iloœæ znaków
- 000004D3  68 0000056B R     1		push offset offset tesTxt1 ; wska¿nik na tekst w buforze
- 000004D8  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
- 000004DE  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;invoke WriteConsoleA, hout, offset tesTxt1, leng , offset rout , 0
-				nowalinia nl,2
- 000004E3  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000004E5  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000004EA  6A 02	     1		push	2		        ; iloœæ znaków
- 000004EC  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000004F1  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000004F7  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				invoke CreateFileA, offset tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
- 00000515  A3 00000B6F R	mov hfile1, eax
-				invoke lstrcpyA, offset tesTxt2, offset katDane
-				invoke lstrcatA, offset tesTxt2, offset nazwa2
-				invoke lstrlenA, offset tesTxt2
- 00000542  A3 00000F1A R	mov leng, eax
-				wyswietl offset tesTxt2, leng
- 00000547  6A 00	     1		push 0 ; rezerwa, musi byæ zero
- 00000549  68 000000E8 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
- 0000054E  FF 35 00000F1A R  1		push leng ; iloœæ znaków
- 00000554  68 0000076B R     1		push offset offset tesTxt2 ; wska¿nik na tekst w buforze
- 00000559  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
- 0000055F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
-				;invoke WriteConsoleA, hout, offset tesTxt2, leng , offset rout , 0
-				nowalinia nl,2
- 00000564  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 00000566  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 0000056B  6A 02	     1		push	2		        ; iloœæ znaków
- 0000056D  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000572  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 00000578  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
-				invoke CreateFileA, offset tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
- 00000596  A3 00000B73 R	mov hfile2, eax
+ 00000313  A1 00000D0F R	mov EAX,licznik1
+ 00000318  0B C0		or EAX,EAX
+ 0000031A  75 19		jnz @F
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+ 00000335			@@:
+ 00000335  FF 05 00000D0F R	inc licznik1
+ 0000033B  83 3D 00000D0F R	cmp licznik1,10
+	   0A
+ 00000342  72 0A		jb @F
+ 00000344  C7 05 00000D0F R	mov licznik1,0
+	   00000000
+ 0000034E			@@:
+ 0000034E  5B			pop EBX
+ 0000034F  53			push EBX
+				INVOKE wsprintfA,OFFSET buf,OFFSET format2,DWORD PTR [EBX]
+ 00000364  A3 0000132C R	mov rsymb,EAX
+				INVOKE WriteConsoleA, hout, OFFSET buf ,rsymb , OFFSET nbytes, 0
+				;;;
+ 00000386  5B			pop EBX
+ 00000387  83 C3 04		add EBX, 4
+ 0000038A  59			pop ECX
+ 0000038B  E2 84		loop powtE
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+				;;
+				;;---------- operacje na plikach ------
+				;;
+				INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test.txt
+ 000003D8  A3 00000B6B R	mov hfile, EAX
+				INVOKE lstrcpyA, OFFSET tesTxt1, OFFSET katDane
+				INVOKE lstrcatA, OFFSET tesTxt1, OFFSET nazwa1
+				INVOKE lstrlenA, OFFSET tesTxt1
+ 00000405  A3 00000F1A R	mov leng, EAX
+				INVOKE WriteConsoleA, hout, OFFSET tesTxt1, leng , OFFSET rout , 0
+				INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+				INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
+ 00000459  A3 00000B6F R	mov hfile1, EAX
+				INVOKE lstrcpyA, OFFSET tesTxt2, OFFSET katDane
+				INVOKE lstrcatA, OFFSET tesTxt2, OFFSET nazwa2
+				INVOKE lstrlenA, OFFSET tesTxt2
+ 00000486  A3 00000F1A R	mov leng, EAX
+				INVOKE WriteConsoleA, hout, OFFSET tesTxt2, leng , OFFSET rout , 0
+				INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+				INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
+ 000004DA  A3 00000B73 R	mov hfile2, EAX
 				;---------
- 0000059B  B9 00000064		mov ecx, 100
- 000005A0  C7 05 00000D0F R	mov licznik1,8 ;co osma parzysta
+ 000004DF  B9 00000064		mov ECX, 100
+ 000004E4  C7 05 00000D0F R	mov licznik1,8 ;co osma parzysta
 	   00000008
- 000005AA  C7 05 00000D13 R	mov licznik2,8 ;co osma nieparzysta
+ 000004EE  C7 05 00000D13 R	mov licznik2,8 ;co osma nieparzysta
 	   00000008
- 000005B4			powt2:
- 000005B4  51			push ecx
-				invoke ReadFile, hfile, offset buf ,6 , offset nbytes, 0 ;;
- 000005CE  83 3D 00000D07 R	cmp nbytes,0
+ 000004F8			powt2:
+ 000004F8  51			push ECX
+				INVOKE ReadFile, hfile, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+ 00000512  83 3D 00000D07 R	cmp nbytes,0
 	   00
- 000005D5  75 05		jnz @F
- 000005D7  E9 000000D9		jmp zamyk
- 000005DC			@@:
-				invoke ScanInt,offset buf ; tekst ASCII -> liczba
- 000005E9  A3 00000D0B R	mov liczba,eax
- 000005EE  A1 00000D0B R	mov eax,liczba
- 000005F3  A9 00000001		test eax,1h
- 000005F8  74 5A		jz parz
+ 00000519  75 05		jnz @F
+ 0000051B  E9 000000D9		jmp zamyk
+ 00000520			@@:
+				INVOKE ScanInt,OFFSET buf ; tekst ASCII -> liczba
+ 0000052D  A3 00000D0B R	mov liczba,EAX
+ 00000532  A1 00000D0B R	mov EAX,liczba
+ 00000537  A9 00000001		test EAX,1h
+ 0000053C  74 5A		jz parz
 				;-- nieparzysta
- 000005FA  FF 0D 00000D13 R	dec licznik2
- 00000600  83 3D 00000D13 R	cmp licznik2,0
+ 0000053E  FF 0D 00000D13 R	dec licznik2
+ 00000544  83 3D 00000D13 R	cmp licznik2,0
 	   00
- 00000607  74 05		je @F
- 00000609  E9 0000009D		jmp dalej
- 0000060E			@@:
- 0000060E  C7 05 00000D13 R	mov licznik2,8 ; co osma nieparzysta
+ 0000054B  74 05		je @F
+ 0000054D  E9 0000009D		jmp dalej
+ 00000552			@@:
+ 00000552  C7 05 00000D13 R	mov licznik2,8
 	   00000008
-				invoke wsprintfA,offset buf,offset format1,liczba
- 00000630  A3 0000132C R	mov rsymb,eax
-				invoke WriteFile, hfile1, offset buf ,rsymb , offset nbytes, 0
- 00000652  EB 57		jmp dalej
- 00000654			parz:
+				INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
+ 00000574  A3 0000132C R	mov rsymb,EAX
+				INVOKE WriteFile, hfile1, OFFSET buf ,rsymb , OFFSET nbytes, 0
+ 00000596  EB 57		jmp dalej
+ 00000598			parz:
 				;-- parzysta
- 00000654  FF 0D 00000D0F R	dec licznik1
- 0000065A  83 3D 00000D0F R	cmp licznik1,0
+ 00000598  FF 0D 00000D0F R	dec licznik1
+ 0000059E  83 3D 00000D0F R	cmp licznik1,0
 	   00
- 00000661  74 02		je @F
- 00000663  EB 46		jmp dalej
- 00000665			@@:
- 00000665  C7 05 00000D0F R	mov licznik1,8 ; co osma parzysta
+ 000005A5  74 02		je @F
+ 000005A7  EB 46		jmp dalej
+ 000005A9			@@:
+ 000005A9  C7 05 00000D0F R	mov licznik1,8
 	   00000008
-				invoke wsprintfA,offset buf,offset format1,liczba
- 00000687  A3 0000132C R	mov rsymb,eax
-				invoke WriteFile, hfile2, offset buf ,rsymb , offset nbytes, 0
- 000006A9  EB 00		jmp dalej
- 000006AB			dalej:
- 000006AB  59			pop ecx
- 000006AC  E2 02		loop @F
- 000006AE  EB 05		jmp zamyk
- 000006B0			@@:
- 000006B0  E9 FFFFFEFF		jmp powt2
- 000006B5			zamyk:  ; zamkniecie plikow
-				invoke CloseHandle, hfile 
-				invoke CloseHandle, hfile1
-				invoke CloseHandle, hfile2
+				INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
+ 000005CB  A3 0000132C R	mov rsymb,EAX
+				INVOKE WriteFile, hfile2, OFFSET buf ,rsymb , OFFSET nbytes, 0
+ 000005ED  EB 00		jmp dalej
+ 000005EF			dalej:
+ 000005EF  59			pop ECX
+ 000005F0  E2 02		loop @F
+ 000005F2  EB 05		jmp zamyk
+ 000005F4			@@:
+ 000005F4  E9 FFFFFEFF		jmp powt2
+ 000005F9			zamyk:
+				INVOKE CloseHandle, hfile
+				INVOKE CloseHandle, hfile1
+				INVOKE CloseHandle, hfile2
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				invoke lstrlenA, offset nazwat1
- 000006E0  A3 00000F1A R	mov leng, eax
-				invoke WriteConsoleA, hout, offset nazwat1, leng , offset rout , 0
-				;------------------------------|
-				;       plik "test1.txt"       |
-				;------------------------------|
-				invoke CreateFileA, offset tesTxt1,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test1.txt
- 0000071B  A3 00000B6F R	mov hfile1, eax
- 00000720  C7 05 00000D0F R	mov licznik1,0
+				INVOKE lstrlenA, OFFSET nazwat1
+ 00000624  A3 00000F1A R	mov leng, EAX
+				INVOKE WriteConsoleA, hout, OFFSET nazwat1, leng , OFFSET rout , 0
+				;;
+				;;---------plik 1 ----------
+				;;
+				INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test1.txt
+ 0000065F  A3 00000B6F R	mov hfile1, EAX
+ 00000664  C7 05 00000D0F R	mov licznik1,0
 	   00000000
- 0000072A			powtE1:
-				invoke ReadFile, hfile1, offset buf ,6 , offset nbytes, 0 ;;
- 00000743  83 3D 00000D07 R	cmp nbytes,0
+ 0000066E			powtE1:
+				INVOKE ReadFile, hfile1, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+ 00000687  83 3D 00000D07 R	cmp nbytes,0
 	   00
- 0000074A  75 02		jnz @F
- 0000074C  EB 56		jmp zamyk1
- 0000074E			@@:
- 0000074E  83 3D 00000D0F R	cmp licznik1,0
+ 0000068E  75 02		jnz @F
+ 00000690  EB 56		jmp zamyk1
+ 00000692			@@:
+ 00000692  83 3D 00000D0F R	cmp licznik1,0
 	   00
- 00000755  75 19		jnz @F
-				;--- nowa linia ---------
-				nowalinia nl, 2		;  MAKRO
- 00000757  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 00000759  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 0000075E  6A 02	     1		push	2		        ; iloœæ znaków
- 00000760  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000765  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 0000076B  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
- 00000770			@@:
- 00000770  FF 05 00000D0F R	inc licznik1
- 00000776  83 3D 00000D0F R	cmp licznik1,10
+ 00000699  75 19		jnz @F
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+ 000006B4			@@:
+ 000006B4  FF 05 00000D0F R	inc licznik1
+ 000006BA  83 3D 00000D0F R	cmp licznik1,10
 	   0A
- 0000077D  72 0A		jb @F
- 0000077F  C7 05 00000D0F R	mov licznik1,0
+ 000006C1  72 0A		jb @F
+ 000006C3  C7 05 00000D0F R	mov licznik1,0
 	   00000000
- 00000789			@@:
-				invoke WriteConsoleA, hout, offset buf ,4, offset nbytes, 0
- 000007A2  EB 86		jmp powtE1
- 000007A4			zamyk1:; zamkniecie pliku
-				invoke CloseHandle, hfile1
-				;--- nowa linia ---------
-				nowalinia nl, 2		; MAKRO
- 000007AF  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000007B1  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000007B6  6A 02	     1		push	2		        ; iloœæ znaków
- 000007B8  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000007BD  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000007C3  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+ 000006CD			@@:
+				INVOKE WriteConsoleA, hout, OFFSET buf ,4, OFFSET nbytes, 0
+ 000006E6  EB 86		jmp powtE1
+ 000006E8			zamyk1:
+				INVOKE CloseHandle, hfile1
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-				invoke lstrlenA, offset nazwat2
- 000007D2  A3 00000F1A R	mov leng, eax
-				invoke WriteConsoleA, hout, offset nazwat2, leng , offset rout , 0
-				;------------------------------|
-				;       plik "test2.txt"       |
-				;------------------------------|
-				invoke CreateFileA, offset tesTxt2,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test2.txt
- 0000080D  A3 00000B6F R	mov hfile1, eax
- 00000812  C7 05 00000D0F R	mov licznik1,0
+				INVOKE lstrlenA, OFFSET nazwat2
+ 00000716  A3 00000F1A R	mov leng, EAX
+				INVOKE WriteConsoleA, hout, OFFSET nazwat2, leng , OFFSET rout , 0
+				;;
+				;;----------plik 2 ------
+				;;
+				INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test2.txt
+ 00000751  A3 00000B6F R	mov hfile1, EAX
+ 00000756  C7 05 00000D0F R	mov licznik1,0
 	   00000000
- 0000081C			powtE2:
-				invoke ReadFile, hfile2, offset buf ,6 , offset nbytes, 0 ;;
- 00000835  83 3D 00000D07 R	cmp nbytes,0
+ 00000760			powtE2:
+				INVOKE ReadFile, hfile2, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+ 00000779  83 3D 00000D07 R	cmp nbytes,0
 	   00
- 0000083C  75 02		jnz @F
- 0000083E  EB 56		jmp zamyk2
- 00000840			@@:
- 00000840  83 3D 00000D0F R	cmp licznik1,0
+ 00000780  75 02		jnz @F
+ 00000782  EB 56		jmp zamyk2
+ 00000784			@@:
+ 00000784  83 3D 00000D0F R	cmp licznik1,0
 	   00
- 00000847  75 19		jnz @F
-				;--- nowa linia ---------
-				nowalinia nl, 2		; MAKRO
- 00000849  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 0000084B  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 00000850  6A 02	     1		push	2		        ; iloœæ znaków
- 00000852  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 00000857  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 0000085D  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
- 00000862			@@:
- 00000862  FF 05 00000D0F R	inc licznik1
- 00000868  83 3D 00000D0F R	cmp licznik1,10
+ 0000078B  75 19		jnz @F
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+ 000007A6			@@:
+ 000007A6  FF 05 00000D0F R	inc licznik1
+ 000007AC  83 3D 00000D0F R	cmp licznik1,10
 	   0A
- 0000086F  72 0A		jb @F
- 00000871  C7 05 00000D0F R	mov licznik1,0
+ 000007B3  72 0A		jb @F
+ 000007B5  C7 05 00000D0F R	mov licznik1,0
 	   00000000
- 0000087B			@@:
-				invoke WriteConsoleA, hout, offset buf ,4, offset nbytes, 0
- 00000894  EB 86		jmp powtE2
- 00000896			zamyk2:				; zamkniecie pliku
-				invoke CloseHandle, hfile2
-				;--- nowa linia ---------
-				nowalinia nl, 2		;  MAKRO
- 000008A1  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
- 000008A3  68 000000E8 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
- 000008A8  6A 02	     1		push	2		        ; iloœæ znaków
- 000008AA  68 00000004 R     1		push	offset nl 	; wska¿nik na tekst
- 000008AF  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
- 000008B5  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+ 000007BF			@@:
+				INVOKE WriteConsoleA, hout, OFFSET buf ,4, OFFSET nbytes, 0
+ 000007D8  EB 86		jmp powtE2
+ 000007DA			zamyk2:
+				INVOKE CloseHandle, hfile2
+				;--- new line ---------
+				INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 000008BA			kon:
+ 000007FE			kon:
 				;----- wywo³anie funkcji ExitProcess ---------
-				invoke ExitProcess,0
+				INVOKE ExitProcess,0
 				;==================================
 				;=== Podprogramy ==================
 				;==================================
- 000008C1 000008C1		ScanInt proc C adres
-				;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez eax
+ 00000805 00000805		ScanInt PROC C adres
+				;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez EAX
 				;; argument - zakoñczony zerem wiersz z cyframi
-				;; rejestry: ebx - adres wiersza, edx - znak liczby, esi - indeks cyfry w wierszu, edi - tymczasowy
+				;; rejestry: EBX - adres wiersza, EDX - znak liczby, ESI - indeks cyfry w wierszu, EDI - tymczasowy
 				;--- pocz¹tek funkcji
 				;--- odk³adanie na stos
- 000008C4  53			push ebx
- 000008C5  51			push ecx
- 000008C6  52			push edx
- 000008C7  56			push esi
- 000008C8  57			push edi
+ 00000808  53			push EBX
+ 00000809  51			push ECX
+ 0000080A  52			push EDX
+ 0000080B  56			push ESI
+ 0000080C  57			push EDI
 				;--- przygotowywanie cyklu
-				invoke lstrlenA, adres
- 000008D1  8B F8		mov edi, eax ;iloœæ znaków
- 000008D3  8B C8		mov ecx, eax ;iloœæ powtórzeñ = iloœæ znaków
- 000008D5  33 F6		xor esi, esi ; wyzerowanie esi
- 000008D7  33 D2		xor edx, edx ; wyzerowanie edx
- 000008D9  33 C0		xor eax, eax ; wyzerowanie eax
- 000008DB  8B 5D 08		mov ebx, adres
+				INVOKE lstrlenA, adres
+ 00000815  8B F8		mov EDI, EAX ;iloœæ znaków
+ 00000817  8B C8		mov ECX, EAX ;iloœæ powtórzeñ = iloœæ znaków
+ 00000819  33 F6		xor ESI, ESI ; wyzerowanie ESI
+ 0000081B  33 D2		xor EDX, EDX ; wyzerowanie EDX
+ 0000081D  33 C0		xor EAX, EAX ; wyzerowanie EAX
+ 0000081F  8B 5D 08		mov EBX, adres
 				;--- cykl --------------------------
- 000008DE  80 3C 1E 2D		pocz: cmp byte ptr [ebx+esi], 02Dh ;porównanie z kodem '-'
- 000008E2  75 07		jne @F
- 000008E4  BA 00000001		mov edx, 1
- 000008E9  EB 24		jmp nast
- 000008EB  80 3C 1E 30		@@: cmp byte ptr [ebx+esi], 030h ;porównanie z kodem '0'
- 000008EF  73 02		jae @F
- 000008F1  EB 1C		jmp nast
- 000008F3  80 3C 1E 39		@@: cmp byte ptr [ebx+esi], 039h ;porównanie z kodem '9'
- 000008F7  76 02		jbe @F
- 000008F9  EB 14		jmp nast
+ 00000822  80 3C 1E 2D		pocz: cmp BYTE PTR [EBX+ESI], 02Dh ;porównanie z kodem '-'
+ 00000826  75 07		jne @F
+ 00000828  BA 00000001		mov EDX, 1
+ 0000082D  EB 24		jmp nast
+ 0000082F  80 3C 1E 30		@@: cmp BYTE PTR [EBX+ESI], 030h ;porównanie z kodem '0'
+ 00000833  73 02		jae @F
+ 00000835  EB 1C		jmp nast
+ 00000837  80 3C 1E 39		@@: cmp BYTE PTR [EBX+ESI], 039h ;porównanie z kodem '9'
+ 0000083B  76 02		jbe @F
+ 0000083D  EB 14		jmp nast
 				;----
- 000008FB  52			@@: push edx ; do edx procesor mo¿e zapisaæ wynik mno¿enia
- 000008FC  BF 0000000A		mov edi, 10
- 00000901  F7 E7		mul edi ;mno¿enie eax * edi
- 00000903  8B F8		mov edi, eax ; tymczasowo z eax do edi
- 00000905  33 C0		xor eax, eax ;zerowani eax
- 00000907  8A 04 1E		mov AL, byte ptr [ebx+esi]
- 0000090A  2C 30		sub AL, 030h ; korekta: cyfra = kod znaku - kod '0'
- 0000090C  03 C7		add eax, edi ; dodanie cyfry
- 0000090E  5A			pop edx
- 0000090F  46			nast: inc esi
- 00000910  49			dec ecx
- 00000911  74 02		jz @F
- 00000913  EB C9		jmp pocz
+ 0000083F  52			@@: push EDX ; do EDX procesor mo¿e zapisaæ wynik mno¿enia
+ 00000840  BF 0000000A		mov EDI, 10
+ 00000845  F7 E7		mul EDI ;mno¿enie EAX * EDI
+ 00000847  8B F8		mov EDI, EAX ; tymczasowo z EAX do EDI
+ 00000849  33 C0		xor EAX, EAX ;zerowani EAX
+ 0000084B  8A 04 1E		mov AL, BYTE PTR [EBX+ESI]
+ 0000084E  2C 30		sub AL, 030h ; korekta: cyfra = kod znaku - kod '0'
+ 00000850  03 C7		add EAX, EDI ; dodanie cyfry
+ 00000852  5A			pop EDX
+ 00000853  46			nast: inc ESI
+ 00000854  49			dec ECX
+ 00000855  74 02		jz @F
+ 00000857  EB C9		jmp pocz
 				;--- wynik
- 00000915  0B D2		@@: or edx, edx ;analiza znacznika edx
- 00000917  74 02		jz @F
- 00000919  F7 D8		neg eax
- 0000091B			@@:
+ 00000859  0B D2		@@: or EDX, EDX ;analiza znacznika EDX
+ 0000085B  74 02		jz @F
+ 0000085D  F7 D8		neg EAX
+ 0000085F			@@:
 				;--- zdejmowanie ze stosu
- 0000091B  5F			pop edi
- 0000091C  5E			pop esi
- 0000091D  5A			pop edx
- 0000091E  59			pop ecx
- 0000091F  5B			pop ebx
+ 0000085F  5F			pop EDI
+ 00000860  5E			pop ESI
+ 00000861  5A			pop EDX
+ 00000862  59			pop ECX
+ 00000863  5B			pop EBX
 				;--- powrót
 				ret
- 00000922			ScanInt endp
+ 00000866			ScanInt ENDP
 				;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 00000922			_text ends
+ 00000866			_text ends
 				end start
 				;----------------------------------------|
 				;    Koniec segmentu kodu                |
 				;----------------------------------------|
-Microsoft (R) Macro Assembler Version 6.14.8444		    04/29/20 12:13:28
+Microsoft (R) Macro Assembler Version 6.14.8444		    04/29/20 13:11:21
 .\cw7\cw7.asm						     Symbols 2 - 1
 
 
@@ -880,26 +756,26 @@ Segments and Groups:
 
 FLAT . . . . . . . . . . . . . .	GROUP
 _DATA  . . . . . . . . . . . . .	32 Bit	 00001330 Para	  Public  'DATA'	
-_TEXT  . . . . . . . . . . . . .	32 Bit	 00000922 Para	  Public  'CODE'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 00000866 Para	  Public  'CODE'	
 
 
 Procedures,  parameters and locals:
 
                 N a m e                 Type     Value    Attr
 
-$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000008C1 Private STDCALL
+$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 00000805 Private STDCALL
   losowe . . . . . . . . . . . .	L Near	 0000022C _TEXT	
-  powt . . . . . . . . . . . . .	L Near	 000002CB _TEXT	
-  powtE  . . . . . . . . . . . .	L Near	 0000032A _TEXT	
-  powt2  . . . . . . . . . . . .	L Near	 000005B4 _TEXT	
-  parz . . . . . . . . . . . . .	L Near	 00000654 _TEXT	
-  dalej  . . . . . . . . . . . .	L Near	 000006AB _TEXT	
-  zamyk  . . . . . . . . . . . .	L Near	 000006B5 _TEXT	
-  powtE1 . . . . . . . . . . . .	L Near	 0000072A _TEXT	
-  zamyk1 . . . . . . . . . . . .	L Near	 000007A4 _TEXT	
-  powtE2 . . . . . . . . . . . .	L Near	 0000081C _TEXT	
-  zamyk2 . . . . . . . . . . . .	L Near	 00000896 _TEXT	
-  kon  . . . . . . . . . . . . .	L Near	 000008BA _TEXT	
+  powt . . . . . . . . . . . . .	L Near	 000002B2 _TEXT	
+  powtE  . . . . . . . . . . . .	L Near	 00000311 _TEXT	
+  powt2  . . . . . . . . . . . .	L Near	 000004F8 _TEXT	
+  parz . . . . . . . . . . . . .	L Near	 00000598 _TEXT	
+  dalej  . . . . . . . . . . . .	L Near	 000005EF _TEXT	
+  zamyk  . . . . . . . . . . . .	L Near	 000005F9 _TEXT	
+  powtE1 . . . . . . . . . . . .	L Near	 0000066E _TEXT	
+  zamyk1 . . . . . . . . . . . .	L Near	 000006E8 _TEXT	
+  powtE2 . . . . . . . . . . . .	L Near	 00000760 _TEXT	
+  zamyk2 . . . . . . . . . . . .	L Near	 000007DA _TEXT	
+  kon  . . . . . . . . . . . . .	L Near	 000007FE _TEXT	
 CharToOemA . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CloseHandle  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 CopyFileA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -911,10 +787,10 @@ GetLastError . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External
 GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 ReadFile . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
-ScanInt  . . . . . . . . . . . .	P Near	 000008C1 _TEXT	Length= 00000061 Public C
+ScanInt  . . . . . . . . . . . .	P Near	 00000805 _TEXT	Length= 00000061 Public C
   adres  . . . . . . . . . . . .	DWord	 bp + 00000008
-  pocz . . . . . . . . . . . . .	L Near	 000008DE _TEXT	
-  nast . . . . . . . . . . . . .	L Near	 0000090F _TEXT	
+  pocz . . . . . . . . . . . . .	L Near	 00000822 _TEXT	
+  nast . . . . . . . . . . . . .	L Near	 00000853 _TEXT	
 WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 WriteFile  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
 lstrcatA . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
@@ -972,7 +848,7 @@ TRUNCATE_EXISTING  . . . . . . .	Number	 00000005h
 buff . . . . . . . . . . . . . .	Byte	 0000111E _DATA	
 bufor  . . . . . . . . . . . . .	Byte	 00000D1A _DATA	
 buf  . . . . . . . . . . . . . .	Byte	 00000F1E _DATA	
-dalej  . . . . . . . . . . . . .	L Near	 000006AB _TEXT	
+dalej  . . . . . . . . . . . . .	L Near	 000005EF _TEXT	
 format1  . . . . . . . . . . . .	Byte	 0000131E _DATA	
 format2  . . . . . . . . . . . .	Byte	 00001326 _DATA	
 hfile1 . . . . . . . . . . . . .	DWord	 00000B6F _DATA	
@@ -980,7 +856,7 @@ hfile2 . . . . . . . . . . . . .	DWord	 00000B73 _DATA
 hfile  . . . . . . . . . . . . .	DWord	 00000B6B _DATA	
 hout . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
 katDane  . . . . . . . . . . . .	Byte	 0000096B _DATA	
-kon  . . . . . . . . . . . . . .	L Near	 000008BA _TEXT	
+kon  . . . . . . . . . . . . . .	L Near	 000007FE _TEXT	
 lenDANE  . . . . . . . . . . . .	DWord	 000002EC _DATA	
 leng . . . . . . . . . . . . . .	DWord	 00000F1A _DATA	
 liczba . . . . . . . . . . . . .	DWord	 00000D0B _DATA	
@@ -1002,12 +878,12 @@ nl . . . . . . . . . . . . . . .	Byte	 00000004 _DATA
 opisKatZadA2 . . . . . . . . . .	Byte	 00000078 _DATA	
 opisKatZadA  . . . . . . . . . .	Byte	 00000048 _DATA	
 opisKatZadB  . . . . . . . . . .	Byte	 000000B8 _DATA	
-parz . . . . . . . . . . . . . .	L Near	 00000654 _TEXT	
-powt2  . . . . . . . . . . . . .	L Near	 000005B4 _TEXT	
-powtE1 . . . . . . . . . . . . .	L Near	 0000072A _TEXT	
-powtE2 . . . . . . . . . . . . .	L Near	 0000081C _TEXT	
-powtE  . . . . . . . . . . . . .	L Near	 0000032A _TEXT	
-powt . . . . . . . . . . . . . .	L Near	 000002CB _TEXT	
+parz . . . . . . . . . . . . . .	L Near	 00000598 _TEXT	
+powt2  . . . . . . . . . . . . .	L Near	 000004F8 _TEXT	
+powtE1 . . . . . . . . . . . . .	L Near	 0000066E _TEXT	
+powtE2 . . . . . . . . . . . . .	L Near	 00000760 _TEXT	
+powtE  . . . . . . . . . . . . .	L Near	 00000311 _TEXT	
+powt . . . . . . . . . . . . . .	L Near	 000002B2 _TEXT	
 rout . . . . . . . . . . . . . .	DWord	 000000E8 _DATA	
 rozmA  . . . . . . . . . . . . .	DWord	 00000044 _DATA	
 rozmB  . . . . . . . . . . . . .	DWord	 000000B4 _DATA	
@@ -1024,9 +900,9 @@ tesTxt2  . . . . . . . . . . . .	Byte	 0000076B _DATA
 tesTxt . . . . . . . . . . . . .	Byte	 0000036B _DATA	
 zadanieA . . . . . . . . . . . .	Byte	 00000038 _DATA	
 zadanieB . . . . . . . . . . . .	Byte	 000000A8 _DATA	
-zamyk1 . . . . . . . . . . . . .	L Near	 000007A4 _TEXT	
-zamyk2 . . . . . . . . . . . . .	L Near	 00000896 _TEXT	
-zamyk  . . . . . . . . . . . . .	L Near	 000006B5 _TEXT	
+zamyk1 . . . . . . . . . . . . .	L Near	 000006E8 _TEXT	
+zamyk2 . . . . . . . . . . . . .	L Near	 000007DA _TEXT	
+zamyk  . . . . . . . . . . . . .	L Near	 000005F9 _TEXT	
 
 	   0 Warnings
 	   0 Errors

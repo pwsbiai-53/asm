@@ -1,0 +1,54 @@
+ cw6
+
+ Timestamp is 5ea856e8 (Tue Apr 28 18:16:40 2020)
+
+ Preferred load address is 00400000
+
+ Start         Length     Name                   Class
+ 0001:00000000 0000047eH .text                   CODE
+ 0002:00000000 00000020H .idata$5                DATA
+ 0002:00000020 00000028H .idata$2                DATA
+ 0002:00000048 00000014H .idata$3                DATA
+ 0002:0000005c 00000020H .idata$4                DATA
+ 0002:0000007c 00000072H .idata$6                DATA
+ 0002:000000ee 00000000H .edata                  DATA
+ 0003:00000000 00000319H .data                   DATA
+
+  Address         Publics by Value              Rva+Base     Lib:Object
+
+ 0001:00000000       _start                     00401000 f   cw6.obj
+ 0001:0000045a       _CharToOemA@8              0040145a f   user32:user32.dll
+ 0001:00000460       _wsprintfA                 00401460 f   user32:user32.dll
+ 0001:00000466       _ExitProcess@4             00401466 f   kernel32:kernel32.dll
+ 0001:0000046c       _GetStdHandle@4            0040146c f   kernel32:kernel32.dll
+ 0001:00000472       _ReadConsoleA@20           00401472 f   kernel32:kernel32.dll
+ 0001:00000478       _WriteConsoleA@20          00401478 f   kernel32:kernel32.dll
+ 0002:00000000       __imp__GetStdHandle@4      00402000     kernel32:kernel32.dll
+ 0002:00000004       __imp__WriteConsoleA@20    00402004     kernel32:kernel32.dll
+ 0002:00000008       __imp__ExitProcess@4       00402008     kernel32:kernel32.dll
+ 0002:0000000c       __imp__ReadConsoleA@20     0040200c     kernel32:kernel32.dll
+ 0002:00000010       \177kernel32_NULL_THUNK_DATA 00402010     kernel32:kernel32.dll
+ 0002:00000014       __imp__wsprintfA           00402014     user32:user32.dll
+ 0002:00000018       __imp__CharToOemA@8        00402018     user32:user32.dll
+ 0002:0000001c       \177user32_NULL_THUNK_DATA 0040201c     user32:user32.dll
+ 0002:00000020       __IMPORT_DESCRIPTOR_user32 00402020     user32:user32.dll
+ 0002:00000034       __IMPORT_DESCRIPTOR_kernel32 00402034     kernel32:kernel32.dll
+ 0002:00000048       __NULL_IMPORT_DESCRIPTOR   00402048     user32:user32.dll
+
+ entry point at        0001:00000000
+
+ Static symbols
+
+ 0001:00000000       _$$$00001@0                00401000 f   cw6.obj
+ 0001:00000423       etN2                       00401423 f   cw6.obj
+ 0001:000002ea       etK20                      004012ea f   cw6.obj
+ 0001:000001cc       etKob11                    004011cc f   cw6.obj
+ 0001:00000439       etK21                      00401439 f   cw6.obj
+ 0001:00000278       etKob12                    00401278 f   cw6.obj
+ 0001:0000029b       etP20                      0040129b f   cw6.obj
+ 0001:00000122       etOb11                     00401122 f   cw6.obj
+ 0001:000001e5       etOb12                     004011e5 f   cw6.obj
+ 0001:000002f4       etP21                      004012f4 f   cw6.obj
+ 0001:0000037f       etP22                      0040137f f   cw6.obj
+ 0001:000003b8       etNie                      004013b8 f   cw6.obj
+ 0001:0000042e       etK22                      0040142e f   cw6.obj

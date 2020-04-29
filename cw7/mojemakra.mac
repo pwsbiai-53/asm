@@ -1,0 +1,51 @@
+;-------------------------------------------|
+;				  mojemakra.mac             |
+;      Operacje na plikach i katalogach.    |
+;                ver 1.0                    |
+;	               Autor: Grzegorz Makowski |
+;                  MASM ver: 6.14.8444      |
+;                  ost. akt. 28.04.2020     |
+;-------------------------------------------|
+;-------------------------------------------|
+;           Makro do deskyptorow            |
+;-------------------------------------------|
+podajdeskr macro handle, deskrypt 
+	push	handle
+	call	GetStdHandle
+	mov	deskrypt,eax ; deskryptor bufora konsoli
+endm
+
+;-------------------------------------------|
+;       Konwersja polskich znakow           |
+;     Przyjmuje tab znakowa i bufor         |
+;-------------------------------------------|
+plznaki macro text, bufor
+	invoke CharToOemA, addr text, addr bufor
+endm
+
+;-------------------------------------------|
+;Wyœwietlanie wyniku- tekstu na ekranie     |
+;  bufor z plznaki lub kazy inny tekst      |
+;-------------------------------------------|
+
+wyswietl macro bufor, rozmiar
+	push 0 ; rezerwa, musi byæ zero
+	push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+	push rozmiar ; iloœæ znaków
+	push offset bufor ; wska¿nik na tekst w buforze
+	push hout ; deskryptor buforu konsoli
+	call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+endm
+
+;-------------------------------------------|
+;     Makro do robienia odstepu linii       |
+;przyjmuje kod hex nowej linni i ilosc zn.  |
+;-------------------------------------------| 
+nowalinia macro nowa, ilznk
+	push	0		        ; rezerwa, musi byæ zero
+	push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+	push	ilznk		        ; iloœæ znaków
+	push	offset nowa 	; wska¿nik na tekst
+	push	hout		    ; deskryptor buforu konsoli
+	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+endm

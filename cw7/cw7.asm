@@ -247,13 +247,13 @@ loop losowe
 ;       plik "test.txt"        |
 ;------------------------------|
 ;--- nowa linia
-INVOKE lstrlenA, OFFSET tesTxt
+INVOKE lstrlenA, offset tesTxt
 mov leng, eax
-INVOKE WriteConsoleA, hout, OFFSET tesTxt, leng , OFFSET rout , 0
-;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+INVOKE WriteConsoleA, hout, offset tesTxt, leng , offset rout , 0
+;INVOKE WriteConsoleA, hout, offset nastwiersz, 2 , offset rout , 0
 nowalinia nxt,2     ; nowa linia
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
+INVOKE CreateFileA, offset tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
 mov hfile, eax
 ;-- z tablicy do pliku ----
 lea EBX, tab
@@ -261,9 +261,9 @@ mov ECX, 100
 powt:
 push ECX
 push EBX
-INVOKE wsprintfA,OFFSET buf,OFFSET format1,DWORD PTR [EBX]
+INVOKE wsprintfA,offset buf,offset format1,DWORD PTR [EBX]
 mov rsymb,eax
-INVOKE WriteFile, hfile, OFFSET buf ,rsymb , OFFSET nbytes, 0
+INVOKE WriteFile, hfile, offset buf ,rsymb , offset nbytes, 0
 pop EBX
 add EBX, 4
 pop ECX
@@ -292,9 +292,9 @@ mov licznik1,0
 @@:
 pop EBX
 push EBX
-INVOKE wsprintfA,OFFSET buf,OFFSET format2,DWORD PTR [EBX]
+INVOKE wsprintfA,offset buf,offset format2,DWORD PTR [EBX]
 mov rsymb,eax
-INVOKE WriteConsoleA, hout, OFFSET buf ,rsymb , OFFSET nbytes, 0
+INVOKE WriteConsoleA, hout, offset buf ,rsymb , offset nbytes, 0
 ;;;
 pop EBX
 add EBX, 4
@@ -307,25 +307,25 @@ nowalinia nl, 2		;   MAKRO
 ;;
 ;;---------- operacje na plikach ------
 ;;
-INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test.txt
+INVOKE CreateFileA, offset tesTxt,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test.txt
 mov hfile, eax
-INVOKE lstrcpyA, OFFSET tesTxt1, OFFSET katDane
-INVOKE lstrcatA, OFFSET tesTxt1, OFFSET nazwa1
-INVOKE lstrlenA, OFFSET tesTxt1
+INVOKE lstrcpyA, offset tesTxt1, offset katDane
+INVOKE lstrcatA, offset tesTxt1, offset nazwa1
+INVOKE lstrlenA, offset tesTxt1
 mov leng, eax
-INVOKE WriteConsoleA, hout, OFFSET tesTxt1, leng , OFFSET rout , 0
-;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+INVOKE WriteConsoleA, hout, offset tesTxt1, leng , offset rout , 0
+;INVOKE WriteConsoleA, hout, offset nastwiersz, 2 , offset rout , 0
 nowalinia nxt,2     ; nowa linia
-INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
+INVOKE CreateFileA, offset tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
 mov hfile1, eax
-INVOKE lstrcpyA, OFFSET tesTxt2, OFFSET katDane
-INVOKE lstrcatA, OFFSET tesTxt2, OFFSET nazwa2
-INVOKE lstrlenA, OFFSET tesTxt2
+INVOKE lstrcpyA, offset tesTxt2, offset katDane
+INVOKE lstrcatA, offset tesTxt2, offset nazwa2
+INVOKE lstrlenA, offset tesTxt2
 mov leng, eax
-INVOKE WriteConsoleA, hout, OFFSET tesTxt2, leng , OFFSET rout , 0
-;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+INVOKE WriteConsoleA, hout, offset tesTxt2, leng , offset rout , 0
+;INVOKE WriteConsoleA, hout, offset nastwiersz, 2 , offset rout , 0
 nowalinia nxt,2     ; nowa linia
-INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
+INVOKE CreateFileA, offset tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
 mov hfile2, eax
 ;---------
 mov ECX, 100
@@ -333,12 +333,12 @@ mov licznik1,8 ;co osma parzysta
 mov licznik2,8 ;co osma nieparzysta
 powt2:
 push ECX
-INVOKE ReadFile, hfile, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+INVOKE ReadFile, hfile, offset buf ,6 , offset nbytes, 0 ;;
 cmp nbytes,0
 jnz @F
 jmp zamyk
 @@:
-INVOKE ScanInt,OFFSET buf ; tekst ASCII -> liczba
+INVOKE ScanInt,offset buf ; tekst ASCII -> liczba
 mov liczba,eax
 mov eax,liczba
 test eax,1h
@@ -350,9 +350,9 @@ je @F
 jmp dalej
 @@:
 mov licznik2,8
-INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
+INVOKE wsprintfA,offset buf,offset format1,liczba
 mov rsymb,eax
-INVOKE WriteFile, hfile1, OFFSET buf ,rsymb , OFFSET nbytes, 0
+INVOKE WriteFile, hfile1, offset buf ,rsymb , offset nbytes, 0
 jmp dalej
 parz:
 ;-- parzysta
@@ -362,9 +362,9 @@ je @F
 jmp dalej
 @@:
 mov licznik1,8
-INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
+INVOKE wsprintfA,offset buf,offset format1,liczba
 mov rsymb,eax
-INVOKE WriteFile, hfile2, OFFSET buf ,rsymb , OFFSET nbytes, 0
+INVOKE WriteFile, hfile2, offset buf ,rsymb , offset nbytes, 0
 jmp dalej
 dalej:
 pop ECX
@@ -377,17 +377,17 @@ INVOKE CloseHandle, hfile
 INVOKE CloseHandle, hfile1
 INVOKE CloseHandle, hfile2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INVOKE lstrlenA, OFFSET nazwat1
+INVOKE lstrlenA, offset nazwat1
 mov leng, eax
-INVOKE WriteConsoleA, hout, OFFSET nazwat1, leng , OFFSET rout , 0
+INVOKE WriteConsoleA, hout, offset nazwat1, leng , offset rout , 0
 ;;
 ;;---------plik 1 ----------
 ;;
-INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test1.txt
+INVOKE CreateFileA, offset tesTxt1,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test1.txt
 mov hfile1, eax
 mov licznik1,0
 powtE1:
-INVOKE ReadFile, hfile1, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+INVOKE ReadFile, hfile1, offset buf ,6 , offset nbytes, 0 ;;
 cmp nbytes,0
 jnz @F
 jmp zamyk1
@@ -402,24 +402,24 @@ cmp licznik1,10
 jb @F
 mov licznik1,0
 @@:
-INVOKE WriteConsoleA, hout, OFFSET buf ,4, OFFSET nbytes, 0
+INVOKE WriteConsoleA, hout, offset buf ,4, offset nbytes, 0
 jmp powtE1
 zamyk1:
 INVOKE CloseHandle, hfile1
 ;--- new line ---------
 nowalinia nl, 2		;   MAKRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-INVOKE lstrlenA, OFFSET nazwat2
+INVOKE lstrlenA, offset nazwat2
 mov leng, eax
-INVOKE WriteConsoleA, hout, OFFSET nazwat2, leng , OFFSET rout , 0
+INVOKE WriteConsoleA, hout, offset nazwat2, leng , offset rout , 0
 ;;
 ;;----------plik 2 ------
 ;;
-INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test2.txt
+INVOKE CreateFileA, offset tesTxt2,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test2.txt
 mov hfile1, eax
 mov licznik1,0
 powtE2:
-INVOKE ReadFile, hfile2, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
+INVOKE ReadFile, hfile2, offset buf ,6 , offset nbytes, 0 ;;
 cmp nbytes,0
 jnz @F
 jmp zamyk2
@@ -434,7 +434,7 @@ cmp licznik1,10
 jb @F
 mov licznik1,0
 @@:
-INVOKE WriteConsoleA, hout, OFFSET buf ,4, OFFSET nbytes, 0
+INVOKE WriteConsoleA, hout, offset buf ,4, offset nbytes, 0
 jmp powtE2
 zamyk2:
 INVOKE CloseHandle, hfile2

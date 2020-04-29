@@ -1,0 +1,32 @@
+;-------------------------------------------|
+;				  cw7.mac             |
+;      Operacje na plikach i katalogach.    |
+;                ver 1.0                    |
+;	               Autor: Grzegorz Makowski |
+;                  MASM ver: 6.14.8444      |
+;                  ost. akt. 28.04.2020     |
+;-------------------------------------------|
+;-------------------------------------------|
+;           Makro do opisu zadañ            |
+;-------------------------------------------|
+zadA macro 
+plznaki naglow, buf ; konwersja - MAKRO
+;--- wyœwietlenie  powitania ---------
+wyswietl buf, rozmN ; wyswietlenie - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+;--- wywietlenie tekstu Zadanie a ----
+plznaki zadanieA, buff		; MAKRO
+wyswietl buff, rozmA		; wyswietlenie - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+endm
+
+zadB macro 
+plznaki zadanieB, buff
+wyswietl buff, rozmB
+nowalinia nxt,2     ; nowa linia
+nowalinia nl,2
+plznaki opisKatZadB, buff
+wyswietl buff, rozmkatzadB
+nowalinia nxt,2     ; nowa linia
+endm

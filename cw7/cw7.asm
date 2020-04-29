@@ -124,6 +124,7 @@ _data segment
 hout dd 0
 nl db 0Dh, 0Ah, 0	; nowa linia
 nl2	db 0Dh,0Ah,20h,0 ; nowa inne formatowanie
+nxt db 13,10,0 ; nastepny wiersz
 naglow db "Autor aplikacji Grzegorz Makowski i53",0
 align 4 ; przesuniecie do adresu podzielnego na 4
 rozmN dd $ - naglow ;iloœæ znaków w tablicy
@@ -166,7 +167,6 @@ nbytes dd 0
 liczba dd 0
 licznik1 dd 0
 licznik2 dd 0
-nastwiersz db 13,10,0
 bufor db mbuf dup(0)
 leng dd 0
 buf db mbuf dup(0)		; bufor pomocniczy
@@ -248,12 +248,13 @@ loop losowe
 ;------------------------------|
 ;--- nowa linia
 INVOKE lstrlenA, OFFSET tesTxt
-mov leng, EAX
+mov leng, eax
 INVOKE WriteConsoleA, hout, OFFSET tesTxt, leng , OFFSET rout , 0
-INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+nowalinia nxt,2     ; nowa linia
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ OR GENERIC_WRITE , 0, 0, OPEN_EXISTING, 0, 0 ; tworzenie pliku
-mov hfile, EAX
+mov hfile, eax
 ;-- z tablicy do pliku ----
 lea EBX, tab
 mov ECX, 100
@@ -261,7 +262,7 @@ powt:
 push ECX
 push EBX
 INVOKE wsprintfA,OFFSET buf,OFFSET format1,DWORD PTR [EBX]
-mov rsymb,EAX
+mov rsymb,eax
 INVOKE WriteFile, hfile, OFFSET buf ,rsymb , OFFSET nbytes, 0
 pop EBX
 add EBX, 4
@@ -278,11 +279,11 @@ powtE:
 push ECX ;;
 push EBX
 ;;;
-mov EAX,licznik1
-or EAX,EAX
+mov eax,licznik1
+or eax,eax
 jnz @F
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 @@:
 inc licznik1
 cmp licznik1,10
@@ -292,7 +293,7 @@ mov licznik1,0
 pop EBX
 push EBX
 INVOKE wsprintfA,OFFSET buf,OFFSET format2,DWORD PTR [EBX]
-mov rsymb,EAX
+mov rsymb,eax
 INVOKE WriteConsoleA, hout, OFFSET buf ,rsymb , OFFSET nbytes, 0
 ;;;
 pop EBX
@@ -300,30 +301,32 @@ add EBX, 4
 pop ECX
 loop powtE
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 ;;
 ;;---------- operacje na plikach ------
 ;;
 INVOKE CreateFileA, OFFSET tesTxt,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test.txt
-mov hfile, EAX
+mov hfile, eax
 INVOKE lstrcpyA, OFFSET tesTxt1, OFFSET katDane
 INVOKE lstrcatA, OFFSET tesTxt1, OFFSET nazwa1
 INVOKE lstrlenA, OFFSET tesTxt1
-mov leng, EAX
+mov leng, eax
 INVOKE WriteConsoleA, hout, OFFSET tesTxt1, leng , OFFSET rout , 0
-INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+nowalinia nxt,2     ; nowa linia
 INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
-mov hfile1, EAX
+mov hfile1, eax
 INVOKE lstrcpyA, OFFSET tesTxt2, OFFSET katDane
 INVOKE lstrcatA, OFFSET tesTxt2, OFFSET nazwa2
 INVOKE lstrlenA, OFFSET tesTxt2
-mov leng, EAX
+mov leng, eax
 INVOKE WriteConsoleA, hout, OFFSET tesTxt2, leng , OFFSET rout , 0
-INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+;INVOKE WriteConsoleA, hout, OFFSET nastwiersz, 2 , OFFSET rout , 0
+nowalinia nxt,2     ; nowa linia
 INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_WRITE , 0, 0, CREATE_ALWAYS, 0, 0 ; stworzenie pliku
-mov hfile2, EAX
+mov hfile2, eax
 ;---------
 mov ECX, 100
 mov licznik1,8 ;co osma parzysta
@@ -336,9 +339,9 @@ jnz @F
 jmp zamyk
 @@:
 INVOKE ScanInt,OFFSET buf ; tekst ASCII -> liczba
-mov liczba,EAX
-mov EAX,liczba
-test EAX,1h
+mov liczba,eax
+mov eax,liczba
+test eax,1h
 jz parz
 ;-- nieparzysta
 dec licznik2
@@ -348,7 +351,7 @@ jmp dalej
 @@:
 mov licznik2,8
 INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
-mov rsymb,EAX
+mov rsymb,eax
 INVOKE WriteFile, hfile1, OFFSET buf ,rsymb , OFFSET nbytes, 0
 jmp dalej
 parz:
@@ -360,7 +363,7 @@ jmp dalej
 @@:
 mov licznik1,8
 INVOKE wsprintfA,OFFSET buf,OFFSET format1,liczba
-mov rsymb,EAX
+mov rsymb,eax
 INVOKE WriteFile, hfile2, OFFSET buf ,rsymb , OFFSET nbytes, 0
 jmp dalej
 dalej:
@@ -375,13 +378,13 @@ INVOKE CloseHandle, hfile1
 INVOKE CloseHandle, hfile2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INVOKE lstrlenA, OFFSET nazwat1
-mov leng, EAX
+mov leng, eax
 INVOKE WriteConsoleA, hout, OFFSET nazwat1, leng , OFFSET rout , 0
 ;;
 ;;---------plik 1 ----------
 ;;
 INVOKE CreateFileA, OFFSET tesTxt1,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test1.txt
-mov hfile1, EAX
+mov hfile1, eax
 mov licznik1,0
 powtE1:
 INVOKE ReadFile, hfile1, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
@@ -392,7 +395,7 @@ jmp zamyk1
 cmp licznik1,0
 jnz @F
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 @@:
 inc licznik1
 cmp licznik1,10
@@ -404,16 +407,16 @@ jmp powtE1
 zamyk1:
 INVOKE CloseHandle, hfile1
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INVOKE lstrlenA, OFFSET nazwat2
-mov leng, EAX
+mov leng, eax
 INVOKE WriteConsoleA, hout, OFFSET nazwat2, leng , OFFSET rout , 0
 ;;
 ;;----------plik 2 ------
 ;;
 INVOKE CreateFileA, OFFSET tesTxt2,GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0 ; plik test2.txt
-mov hfile1, EAX
+mov hfile1, eax
 mov licznik1,0
 powtE2:
 INVOKE ReadFile, hfile2, OFFSET buf ,6 , OFFSET nbytes, 0 ;;
@@ -424,7 +427,7 @@ jmp zamyk2
 cmp licznik1,0
 jnz @F
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 @@:
 inc licznik1
 cmp licznik1,10
@@ -436,7 +439,7 @@ jmp powtE2
 zamyk2:
 INVOKE CloseHandle, hfile2
 ;--- new line ---------
-INVOKE WriteConsoleA,hout,OFFSET nastwiersz,2,OFFSET rout,0 ; wywo³anie funkcji WriteConsoleA
+nowalinia nl, 2		;   MAKRO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 kon:
 ;----- wywo³anie funkcji ExitProcess ---------
@@ -445,7 +448,7 @@ INVOKE ExitProcess,0
 ;=== Podprogramy ==================
 ;==================================
 ScanInt PROC C adres
-;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez EAX
+;; funkcja ScanInt przekszta³ca ci¹g cyfr do liczby, któr¹ jest zwracana przez eax
 ;; argument - zakoñczony zerem wiersz z cyframi
 ;; rejestry: EBX - adres wiersza, EDX - znak liczby, ESI - indeks cyfry w wierszu, EDI - tymczasowy
 ;--- pocz¹tek funkcji
@@ -457,11 +460,11 @@ push ESI
 push EDI
 ;--- przygotowywanie cyklu
 INVOKE lstrlenA, adres
-mov EDI, EAX ;iloœæ znaków
-mov ECX, EAX ;iloœæ powtórzeñ = iloœæ znaków
+mov EDI, eax ;iloœæ znaków
+mov ECX, eax ;iloœæ powtórzeñ = iloœæ znaków
 xor ESI, ESI ; wyzerowanie ESI
 xor EDX, EDX ; wyzerowanie EDX
-xor EAX, EAX ; wyzerowanie EAX
+xor eax, eax ; wyzerowanie eax
 mov EBX, adres
 ;--- cykl --------------------------
 pocz: cmp BYTE PTR [EBX+ESI], 02Dh ;porównanie z kodem '-'
@@ -477,12 +480,12 @@ jmp nast
 ;----
 @@: push EDX ; do EDX procesor mo¿e zapisaæ wynik mno¿enia
 mov EDI, 10
-mul EDI ;mno¿enie EAX * EDI
-mov EDI, EAX ; tymczasowo z EAX do EDI
-xor EAX, EAX ;zerowani EAX
+mul EDI ;mno¿enie eax * EDI
+mov EDI, eax ; tymczasowo z eax do EDI
+xor eax, eax ;zerowani eax
 mov AL, BYTE PTR [EBX+ESI]
 sub AL, 030h ; korekta: cyfra = kod znaku - kod '0'
-add EAX, EDI ; dodanie cyfry
+add eax, EDI ; dodanie cyfry
 pop EDX
 nast: inc ESI
 dec ECX
@@ -491,7 +494,7 @@ jmp pocz
 ;--- wynik
 @@: or EDX, EDX ;analiza znacznika EDX
 jz @F
-neg EAX
+neg eax
 @@:
 ;--- zdejmowanie ze stosu
 pop EDI

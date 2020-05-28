@@ -1,0 +1,41 @@
+COORD STRUCT ; struktura z współrzędnymi pozycji kursora
+X DW 0 ; współrzędna X
+Y DW 0 ; współrzędna Y
+COORD ENDS
+MOUSE_EVENT_RECORD STRUCT
+dwMousePosition COORD <> ; współrzędne X, Y kursora myszy
+dwButtonState DWORD ? ; znaczniki naciśnięcia przycisków myszy
+dwControlKeyState DWORD ? ; znaczniki naciśnięcia klawiszy sterujących
+dwEventFlags DWORD ? ; znaczniki przesuwania i podwójnego klikniecie myszy
+MOUSE_EVENT_RECORD ENDS
+KEY_EVENT_RECORD STRUCT
+bKeyDown DWORD ? ;znacznik naciśnięcia któregokolwiek klawisza
+wRepeatCount WORD ? ; ilość powtórzeń kodu przy długim naciśnięciu
+wVirtualKeyCode WORD ? ; wirtualny kod klawisza
+wVirtualScanCode WORD ? ; scan-kod klawisza
+UNION
+UnicodeChar WORD ? ; UNICODE kod klawisza
+AsciiChar BYTE ? ; ASCII kod klawisza
+ENDS
+dwControlKeyState DWORD ? ;znaczniki klawiszy sterujących
+KEY_EVENT_RECORD ENDS
+WINDOW_BUFFER_SIZE_RECORD STRUCT
+dwSize COORD <>
+WINDOW_BUFFER_SIZE_RECORD ENDS
+MENU_EVENT_RECORD STRUCT
+dwCommandId DWORD ?
+MENU_EVENT_RECORD ENDS
+FOCUS_EVENT_RECORD STRUCT
+bSetFocus DWORD ?
+FOCUS_EVENT_RECORD ENDS
+INPUT_RECORD STRUCT ;struktura z informacją o zdarzeniu
+EventType WORD ? ; typ zdarzenia
+two_byte_alignment WORD ? ; wyrównanie do granicy/4
+UNION
+KeyEvent KEY_EVENT_RECORD <>
+MouseEvent MOUSE_EVENT_RECORD <>
+WindowBufferSizeEvent WINDOW_BUFFER_SIZE_RECORD <>
+MenuEvent MENU_EVENT_RECORD <>
+FocusEvent FOCUS_EVENT_RECORD <>
+ENDS
+INPUT_RECORD ENDS

@@ -1,0 +1,108 @@
+;-------------------------------------------|
+;				  mojemakra.mac             |
+;                ver 1.0                    |
+;	               Autor: Grzegorz Makowski |
+;                  MASM ver: 6.14.8444      |
+;                  ost. akt. 22.05.2020     |
+;-------------------------------------------|
+;-------------------------------------------|
+;           Makro do deskyptorow            |
+;-------------------------------------------|
+podajdeskr macro handle, deskrypt 
+	push	handle
+	call	GetStdHandle
+	mov	deskrypt,eax ; deskryptor bufora konsoli
+endm
+
+;-------------------------------------------|
+;       Konwersja polskich znakow           |
+;     Przyjmuje tab znakowa i bufor         |
+;-------------------------------------------|
+plznaki macro text, bufor
+	invoke CharToOemA, addr text, addr bufor
+endm
+
+;-------------------------------------------|
+;Wyœwietlanie wyniku- tekstu na ekranie     |
+;  bufor z plznaki lub kazy inny tekst      |
+;-------------------------------------------|
+
+wyswietl macro bufor, rozmiar
+	push 0 ; rezerwa, musi byæ zero
+	push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+	push rozmiar ; iloœæ znaków
+	push offset bufor ; wska¿nik na tekst w buforze
+	push hout ; deskryptor buforu konsoli
+	call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+endm
+
+;-------------------------------------------|
+;     Makro do robienia odstepu linii       |
+;przyjmuje kod hex nowej linni i ilosc zn.  |
+;-------------------------------------------| 
+nowalinia macro nowa, ilznk
+	push	0		        ; rezerwa, musi byæ zero
+	push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+	push	ilznk		        ; iloœæ znaków
+	push	offset nowa 	; wska¿nik na tekst
+	push	hout		    ; deskryptor buforu konsoli
+	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+endm
+
+;-------------------------------------------|
+;              Wyswietlenie nag³ówka        |
+;-------------------------------------------|
+Naglowek macro 
+;--- wywo³anie funkcji GetStdHandle 
+podajdeskr STD_OUTPUT_HANDLE, hout
+plznaki naglow, buf ; konwersja 
+;--- wyœwietlenie  powitania ---------
+wyswietl buf, rozmN ; wyswietlenie
+nowalinia nl, 2		; nowa linia 
+nowalinia nl, 2		; nowa linia 
+endm
+;-------------------------------------------|
+;         Wyswietlenie zadania              |
+;-------------------------------------------|
+zadA macro
+;--- wywietlenie tekstu Zadanie ----
+plznaki tabuff, buff		;
+wyswietl buff, rozmA		; wyswietlenie -
+nowalinia nl, 2		; nowa linia - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+plznaki opisKatZadA, buf		; MAKRO 
+wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania 
+endm
+
+m_linia macro ; rysowanie linii -- ramki
+mov bl, 1
+@@:
+	cmp bl, 118 
+	je @F
+	wyswietl prosta, 1
+	add bl, 1
+	jmp @B
+@@:
+endm
+
+b_ramka macro ; blank_ramka - pusta ramka
+mov bl, 1
+@@:
+	cmp bl, 118
+	je @F
+	wyswietl spacja, 1
+	add bl, 1
+	jmp @B
+@@:
+endm
+	
+drukujZnak macro znak, ile
+mov bl,1
+@@:
+	cmp bl,ile
+	je @F
+	wyswietl znak, 1
+	add bl,1
+	jmp @B
+@@:
+endm

@@ -1,0 +1,45 @@
+;-------------------------------------------|
+;				  cw8.mac                   |
+;      Operacje na plikach i katalogach.    |
+;            Makro do opisu zadañ           |
+;                ver 1.0                    |
+;	               Autor: Grzegorz Makowski |
+;                  MASM ver: 6.14.8444      |
+;                  ost. akt. 22.05.2020     |
+;-------------------------------------------|
+;-------------------------------------------|
+;              Wyswietlenie nag³ówka        |
+;-------------------------------------------|
+Naglowek macro 
+;--- wywo³anie funkcji GetStdHandle 
+podajdeskr STD_OUTPUT_HANDLE, hout
+plznaki naglow, buf ; konwersja 
+;--- wyœwietlenie  powitania ---------
+wyswietl buf, rozmN ; wyswietlenie
+nowalinia nl, 2		; nowa linia 
+nowalinia nl, 2		; nowa linia 
+endm
+;-------------------------------------------|
+;         Wyswietlenie zadania a            |
+;-------------------------------------------|
+zadA macro
+;--- wywietlenie tekstu Zadanie a ----
+plznaki zadanieA, buff		;
+wyswietl buff, rozmA		; wyswietlenie -
+nowalinia nl, 2		; nowa linia - MAKRO
+nowalinia nl, 2		; nowa linia - MAKRO
+plznaki opisKatZadA, buf		; MAKRO 
+wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania 
+endm
+;-------------------------------------------|
+;         Wyswietlenie zadania b            |
+;-------------------------------------------|
+zadB macro 
+plznaki zadanieB, buff
+wyswietl buff, rozmB
+nowalinia nxt,2     ; nowa linia
+nowalinia nl,2
+plznaki opisKatZadB, buff
+wyswietl buff, rozmkatzadB
+nowalinia nxt,2     ; nowa linia
+endm

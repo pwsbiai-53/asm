@@ -1,0 +1,2604 @@
+Microsoft (R) Macro Assembler Version 6.14.8444		    05/28/20 02:30:37
+.\cw8\cw8.asm						     Page 1 - 1
+
+
+				.586p
+				.model flat, stdcall
+				;-------------------------------------------|
+				;     wczytanie plikow zewnetrznych         |
+				;-------------------------------------------| 
+				;-------------------------------------------|
+				;    wczytanie wlasnych makr z pliku        |
+				;-------------------------------------------|
+				include mojemakra.mac	; Makra
+			      C ;-------------------------------------------|
+			      C ;				  mojemakra.mac             |
+			      C ;                ver 1.0                    |
+			      C ;	               Autor: Grzegorz Makowski |
+			      C ;                  MASM ver: 6.14.8444      |
+			      C ;                  ost. akt. 22.05.2020     |
+			      C ;-------------------------------------------|
+			      C ;-------------------------------------------|
+			      C ;           Makro do deskyptorow            |
+			      C ;-------------------------------------------|
+			      C podajdeskr macro handle, deskrypt 
+			      C 	push	handle
+			      C 	call	GetStdHandle
+			      C 	mov	deskrypt,eax ; deskryptor bufora konsoli
+			      C endm
+			      C 
+			      C ;-------------------------------------------|
+			      C ;       Konwersja polskich znakow           |
+			      C ;     Przyjmuje tab znakowa i bufor         |
+			      C ;-------------------------------------------|
+			      C plznaki macro text, bufor
+			      C 	invoke CharToOemA, addr text, addr bufor
+			      C endm
+			      C 
+			      C ;-------------------------------------------|
+			      C ;Wyœwietlanie wyniku- tekstu na ekranie     |
+			      C ;  bufor z plznaki lub kazy inny tekst      |
+			      C ;-------------------------------------------|
+			      C 
+			      C wyswietl macro bufor, rozmiar
+			      C 	push 0 ; rezerwa, musi byæ zero
+			      C 	push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+			      C 	push rozmiar ; iloœæ znaków
+			      C 	push offset bufor ; wska¿nik na tekst w buforze
+			      C 	push hout ; deskryptor buforu konsoli
+			      C 	call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+			      C endm
+			      C 
+			      C ;-------------------------------------------|
+			      C ;     Makro do robienia odstepu linii       |
+			      C ;przyjmuje kod hex nowej linni i ilosc zn.  |
+			      C ;-------------------------------------------| 
+			      C nowalinia macro nowa, ilznk
+			      C 	push	0		        ; rezerwa, musi byæ zero
+			      C 	push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+			      C 	push	ilznk		        ; iloœæ znaków
+			      C 	push	offset nowa 	; wska¿nik na tekst
+			      C 	push	hout		    ; deskryptor buforu konsoli
+			      C 	call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+			      C endm
+			      C 
+			      C ;-------------------------------------------|
+			      C ;              Wyswietlenie nag³ówka        |
+			      C ;-------------------------------------------|
+			      C Naglowek macro 
+			      C ;--- wywo³anie funkcji GetStdHandle 
+			      C podajdeskr STD_OUTPUT_HANDLE, hout
+			      C plznaki naglow, buf ; konwersja 
+			      C ;--- wyœwietlenie  powitania ---------
+			      C wyswietl buf, rozmN ; wyswietlenie
+			      C nowalinia nl, 2		; nowa linia 
+			      C nowalinia nl, 2		; nowa linia 
+			      C endm
+			      C ;-------------------------------------------|
+			      C ;         Wyswietlenie zadania              |
+			      C ;-------------------------------------------|
+			      C zadA macro
+			      C ;--- wywietlenie tekstu Zadanie ----
+			      C plznaki tabuff, buff		;
+			      C wyswietl buff, rozmA		; wyswietlenie -
+			      C nowalinia nl, 2		; nowa linia - MAKRO
+			      C nowalinia nl, 2		; nowa linia - MAKRO
+			      C plznaki opisKatZadA, buf		; MAKRO 
+			      C wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania 
+			      C endm
+			      C 
+			      C m_linia macro ; rysowanie linii -- ramki
+			      C mov bl, 1
+			      C @@:
+			      C 	cmp bl, 118 
+			      C 	je @F
+			      C 	wyswietl prosta, 1
+			      C 	add bl, 1
+			      C 	jmp @B
+			      C @@:
+			      C endm
+			      C 
+			      C b_ramka macro ; blank_ramka - pusta ramka
+			      C mov bl, 1
+			      C @@:
+			      C 	cmp bl, 118
+			      C 	je @F
+			      C 	wyswietl spacja, 1
+			      C 	add bl, 1
+			      C 	jmp @B
+			      C @@:
+			      C endm
+			      C 	
+			      C drukujZnak macro znak, ile
+			      C mov bl,1
+			      C @@:
+			      C 	cmp bl,ile
+			      C 	je @F
+			      C 	wyswietl znak, 1
+			      C 	add bl,1
+			      C 	jmp @B
+			      C @@:
+			      C endm
+			      C 
+				include cw8.mac
+			      C ;-------------------------------------------|
+			      C ;				  cw8.mac                   |
+			      C ;      Operacje na plikach i katalogach.    |
+			      C ;            Makro do opisu zadañ           |
+			      C ;                ver 1.0                    |
+			      C ;	               Autor: Grzegorz Makowski |
+			      C ;                  MASM ver: 6.14.8444      |
+			      C ;                  ost. akt. 22.05.2020     |
+			      C ;-------------------------------------------|
+			      C ;-------------------------------------------|
+			      C ;              Wyswietlenie nag³ówka        |
+			      C ;-------------------------------------------|
+			      C Naglowek macro 
+			      C ;--- wywo³anie funkcji GetStdHandle 
+			      C podajdeskr STD_OUTPUT_HANDLE, hout
+			      C plznaki naglow, buf ; konwersja 
+			      C ;--- wyœwietlenie  powitania ---------
+			      C wyswietl buf, rozmN ; wyswietlenie
+			      C nowalinia nl, 2		; nowa linia 
+			      C nowalinia nl, 2		; nowa linia 
+			      C endm
+			      C ;-------------------------------------------|
+			      C ;         Wyswietlenie zadania a            |
+			      C ;-------------------------------------------|
+			      C zadA macro
+			      C ;--- wywietlenie tekstu Zadanie a ----
+			      C plznaki zadanieA, buff		;
+			      C wyswietl buff, rozmA		; wyswietlenie -
+			      C nowalinia nl, 2		; nowa linia - MAKRO
+			      C nowalinia nl, 2		; nowa linia - MAKRO
+			      C plznaki opisKatZadA, buf		; MAKRO 
+			      C wyswietl buf, rozmkatzada	; wyswietlenie opisu zadania 
+			      C endm
+			      C ;-------------------------------------------|
+			      C ;         Wyswietlenie zadania b            |
+			      C ;-------------------------------------------|
+			      C zadB macro 
+			      C plznaki zadanieB, buff
+			      C wyswietl buff, rozmB
+			      C nowalinia nxt,2     ; nowa linia
+			      C nowalinia nl,2
+			      C plznaki opisKatZadB, buff
+			      C wyswietl buff, rozmkatzadB
+			      C nowalinia nxt,2     ; nowa linia
+			      C endm
+			      C 
+				;include .\include\masm32rt.inc
+				;-------------------------------------------|
+				;      bilioteki systemowe i masm           |
+				;-------------------------------------------|
+				includelib .\lib\user32.lib
+				includelib .\lib\kernel32.lib
+				includelib .\lib\masm32.lib
+				;-------------------------------------------|
+				;  Sta³e do zadania 8                       |
+				;-------------------------------------------|
+ = 00000001			KEY_EVENT EQU 1h ; zdarzenie klawiatury
+ = 00000002			MOUSE_EVENT EQU 2h ; zdarzenie myszy
+ = 00000008			MENU_EVENT EQU 8h
+ = 00000010			FOCUS_EVENT EQU 10h
+ = 00000001			RIGHT_ALT_PRESSED EQU 1h ; Alt prawy
+ = 00000002			LEFT_ALT_PRESSED EQU 2h ; Alt lewy
+ = 00000004			RIGHT_CTRL_PRESSED EQU 4h ; Ctrl prawy
+ = 00000008			LEFT_CTRL_PRESSED EQU 8h ; Ctrl lewy
+ = 00000010			SHIFT_PRESSED EQU 10h ; Shift naciœniêty
+ = 00000020			NUMLOCK_ON EQU 20h ; Num Lock w³¹czony
+ = 00000040			SCROLLLOCK_ON EQU 40h ; Scroll Lock w³¹czony
+ = 00000080			CAPSLOCK_ON EQU 80h ; Caps Lock w³¹czony
+ = 00000100			ENHANCED_KEY EQU 100h ; klawisz jest zwolniony
+ = 00000001			FROM_LEFT_1ST_BUTTON_PRESSED EQU 1h ; przycisk lewy
+ = 00000002			RIGHTMOST_BUTTON_PRESSED EQU 2h ; przycisk prawy
+ = 00000004			FROM_LEFT_2ND_BUTTON_PRESSED EQU 4h ; przycisk srodkowy
+ = 00000008			FROM_LEFT_3ND_BUTTON_PRESSED EQU 8h ; przycisk trzeci z lewa
+ = 00000010			FROM_LEFT_4ND_BUTTON_PRESSED EQU 10h ;przycisk 4-ty z lewa
+ = 00000001			MOUSE_MOVED EQU 1h ; mysz przesuwa siê
+ = 00000002			DOUBLE_CLICK EQU 2h ; podwójne klikniecie
+ = 00000004			MOUSE_WHEELED EQU 4h ; poruszenie kó³kiem myszy
+				;--- struktury z pliku windows.inc ----------
+ 00000004			coord STRUCT
+ 00000000  0000			X DW ?
+ 00000002  0000			Y DW ?
+				coord ENDS
+ 00000010			MOUSE_EVENT_RECORD STRUCT
+ 00000000  0000 0000		dwMousePosition coord <> ; wspó³rzêdne X, Y kursora myszy
+ 00000004  00000000		dwButtonState dword ? ; znaczniki naciœniêcia przycisków myszy
+ 00000008  00000000		dwControlKeyState dword ? ; znaczniki naciœniêcia klawiszy steruj¹cych
+ 0000000C  00000000		dwEventFlags dword ? ; znaczniki przesuwania i podwójnego klik-niecie myszy
+				MOUSE_EVENT_RECORD ENDS
+ 00000010			KEY_EVENT_RECORD STRUCT
+ 00000000  00000000		bKeyDown dword ? ;znacznik naciœniêcia któregokolwiek klawisza
+ 00000004  0000			wRepeatCount WORD ? ; iloœæ powtórzeñ kodu przy d³ugim naciœniêciu
+ 00000006  0000			wVirtualKeyCode WORD ? ; wirtualny kod klawisza
+ 00000008  0000			wVirtualScanCode WORD ? ; scan-kod klawisza
+				UNION
+ 0000000A  0000			UnicodeChar WORD ? ; UNICODE kod klawisza
+				AsciiChar BYTE ? ; ASCII kod klawisza
+				ENDS
+ 0000000C  00000000		dwControlKeyState dword ? ;znaczniki klawiszy steruj¹cych
+				KEY_EVENT_RECORD ENDS
+ 00000004			WINDOW_BUFFER_SIZE_RECORD STRUCT
+ 00000000  0000 0000		dwSize coord <>
+				WINDOW_BUFFER_SIZE_RECORD ENDS
+ 00000004			MENU_EVENT_RECORD STRUCT
+ 00000000  00000000		dwCommandId dword ?
+				MENU_EVENT_RECORD ENDS
+ 00000004			FOCUS_EVENT_RECORD STRUCT
+ 00000000  00000000		bSetFocus dword ?
+				FOCUS_EVENT_RECORD ENDS
+ 00000014			INPUT_RECORD STRUCT ;struktura z informacj¹ o zdarzeniu
+ 00000000  0000			EventType WORD ? ; typ zdarzenia
+ 00000002  0000			two_byte_alignment WORD ? ; wyrównanie do granicy/4
+				UNION
+ 00000004  00000000 0000	KeyEvent KEY_EVENT_RECORD <>
+	   0000 0000 0000
+	   00000000
+				MouseEvent MOUSE_EVENT_RECORD <>
+				WindowBufferSizeEvent WINDOW_BUFFER_SIZE_RECORD <>
+				MenuEvent MENU_EVENT_RECORD <>
+				FocusEvent FOCUS_EVENT_RECORD <>
+				ENDS
+				INPUT_RECORD ENDS
+				;-------------------------------------------|
+				;    stale z pliku .\include\windows.inc    |
+				;-------------------------------------------|
+ =-0000000A			STD_INPUT_HANDLE equ -10
+ =-0000000B			STD_OUTPUT_HANDLE equ -11
+				GetStdHandle proto :dword
+				ReadConsoleA proto :dword,:dword,:dword,:dword,:dword
+				WriteConsoleA proto :dword,:dword,:dword,:dword,:dword
+				ExitProcess proto :dword
+				wsprintfA proto c :vararg
+				lstrlenA proto :dword
+				;--- funkcje API Win32 z pliku .\include\user32.inc ---
+				CharToOemA proto :dword,:dword
+				AllocConsole proto
+				FreeConsole proto
+				SetConsoleTitleA proto :dword
+				SetConsoleTextAttribute proto :dword,:dword
+				GetLargestConsoleWindowSize proto :dword
+				FillConsoleOutputAttribute proto :dword,:dword,:dword,:coord,:dword
+				SetConsoleCursorPosition proto :dword, :coord
+				ReadConsoleInputA proto :dword,:dword,:dword,:dword
+				FlushConsoleInputBuffer proto :dword
+				WriteConsoleOutputCharacterA proto :dword,:dword,:dword,:coord,:dword
+
+
+				;--------------------------------|
+				;--- wlasne defeinicje           |
+				;--------------------------------|
+				Cls proto 	; czyszczenie akranu przez przewiniecie
+				Menu proto 	; wyœwietlanie menu	
+				;--------------------------------|
+				; ---- koniec wlasnych def       |
+				;--------------------------------|
+				;--------------------------------|
+				;            stale               |
+				;--------------------------------|
+ = 00000200			mbuf = 512
+ = 00000011			kolorb = 00010001b ; Niebieski - BG_I,G,R,B,FG__I,G,R,B
+ = 000000FF			kolorw = 11111111b ; Bia³y - BG_I,G,R,B,FG__I,G,R,B
+ = 00000044			kolorc = 01000100b ; Czerwony BG_I,G,R,B,FG__I,G,R,B
+ = 00000007			kolor1 = 00000111b ; Kolory: BG_I,G,R,B,FG__I,G,R,B
+ = 00000061			kolor2 = 01100001b ; Kolory: BG_I,R,G,B,FG__I,R,G,B
+				;------------
+				;clear db "20h"
+ 00000000			_data segment
+ 00000000 00000000		hout dd 0
+ 00000004 00000000		hinp dd ? ; deskryptor buforu wejœciowego
+ 00000008 00000000		rout dd 0
+ 0000000C 57 61 72 73 7A	szkola1 db "Warszawska Uczelnia Medyczna",0
+	   61 77 73 6B 61
+	   20 55 63 7A 65
+	   6C 6E 69 61 20
+	   4D 65 64 79 63
+	   7A 6E 61 00
+ 00000029 0000001D		sz1 dd $ - szkola1
+				align 4
+ 00000030 69 6D 2E 20 54	szkola2 db "im. Tadeusza KoŸluka",0
+	   61 64 65 75 73
+	   7A 61 20 4B 6F
+	   9F 6C 75 6B 61
+	   00
+ 00000045 00000015		sz2 dd $ - szkola2
+				align 4
+ 0000004C C6 77 69 63 7A	szkola3 db "Æwiczenie z programowania niskopozomowego",0
+	   65 6E 69 65 20
+	   7A 20 70 72 6F
+	   67 72 61 6D 6F
+	   77 61 6E 69 61
+	   20 6E 69 73 6B
+	   6F 70 6F 7A 6F
+	   6D 6F 77 65 67
+	   6F 00
+ 00000076 0000002A		sz3 dd $ - szkola3
+				align 4
+ 0000007C 4F 62 73 B3 75	szkola4 db "Obs³uga klawiatury i myszy",0
+	   67 61 20 6B 6C
+	   61 77 69 61 74
+	   75 72 79 20 69
+	   20 6D 79 73 7A
+	   79 00
+ 00000097 0000001B		sz4 dd $ - szkola4
+				align 4
+ 0000009C 57 61 72 69 61	szkola5 db "Wariant N 8",0
+	   6E 74 20 4E 20
+	   38 00
+ 000000A8 0000000C		sz5 dd $ - szkola5
+				align 4
+ 000000AC 22 4F 62 73 B3	szkola6 db '"Obs³uga klawiszy H i I oraz Lewy Alt + lewy myszy"',0
+	   75 67 61 20 6B
+	   6C 61 77 69 73
+	   7A 79 20 48 20
+	   69 20 49 20 6F
+	   72 61 7A 20 4C
+	   65 77 79 20 41
+	   6C 74 20 2B 20
+	   6C 65 77 79 20
+	   6D 79 73 7A 79
+	   22 00
+ 000000E0 00000034		sz6 dd $ - szkola6
+				align 4
+ 000000E4 50 57 53 42 69	tytul db "PWSBiA - Grzegorz Makowski@2020",0
+	   41 20 2D 20 47
+	   72 7A 65 67 6F
+	   72 7A 20 4D 61
+	   6B 6F 77 73 6B
+	   69 40 32 30 32
+	   30 00
+				ALIGN 4
+ 00000104 00000020		tytulr dd $ - tytul ;iloœæ znaków tablicy tytu³
+ 00000108 41 70 6C 69 6B	tytulA db "Aplikacjê konsolow¹ stworzy³ Grzegorz Makowski",0
+	   61 63 6A EA 20
+	   6B 6F 6E 73 6F
+	   6C 6F 77 B9 20
+	   73 74 77 6F 72
+	   7A 79 B3 20 47
+	   72 7A 65 67 6F
+	   72 7A 20 4D 61
+	   6B 6F 77 73 6B
+	   69 00
+				ALIGN 4
+ 00000138 00000030		tytulrozm dd $ - tytulA ;iloœæ znaków tablicy tytu³
+				align 4
+ 0000013C 2E 2E 2E 2E 3A	menuTekst db "....:::: MENU ::::.... "
+	   3A 3A 3A 20 4D
+	   45 4E 55 20 3A
+	   3A 3A 3A 2E 2E
+	   2E 2E 20
+ 00000153 00000017		menuR dd $ - menuTekst
+ 00000157 41 75 74 6F 72	naglow db "Autor aplikacji Grzegorz Makowski i53",0
+	   20 61 70 6C 69
+	   6B 61 63 6A 69
+	   20 47 72 7A 65
+	   67 6F 72 7A 20
+	   4D 61 6B 6F 77
+	   73 6B 69 20 69
+	   35 33 00
+				align 4 ; przesuniecie do adresu podzielnego na 4
+ 00000180 00000029		rozmN dd $ - naglow ;iloœæ znaków w tablicy
+ 00000184 5A 61 64 61 6E	zadanieA db "Zadanie a) wciœnij klawisz [A/a]",0
+	   69 65 20 61 29
+	   20 77 63 69 9C
+	   6E 69 6A 20 6B
+	   6C 61 77 69 73
+	   7A 20 5B 41 2F
+	   61 5D 00
+ 000001A5 00000021		rozmA dd $ - zadanieA ; ilosc znakow tekstu zadanieA
+				align 4
+ 000001AC 5A 61 64 61 6E	zadanieB db "Zadanie b) wciœnij klawisz [B/b]",0
+	   69 65 20 62 29
+	   20 77 63 69 9C
+	   6E 69 6A 20 6B
+	   6C 61 77 69 73
+	   7A 20 5B 42 2F
+	   62 5D 00
+ 000001CD 00000021		rozmB dd $ - zadanieB
+				align 4
+ 000001D4 5A 61 64 61 6E	zadanieC db "Zadanie c) wciœnij klawisz [C/c]",0
+	   69 65 20 63 29
+	   20 77 63 69 9C
+	   6E 69 6A 20 6B
+	   6C 61 77 69 73
+	   7A 20 5B 43 2F
+	   63 5D 00
+ 000001F5 00000021		rozmC dd $ - zadanieC
+				align 4
+ 000001FC 57 63 69 9C 6E	zakonczenie db "Wciœnij klawisz [Q/q] aby wyjœæ z programu.",0
+	   69 6A 20 6B 6C
+	   61 77 69 73 7A
+	   20 5B 51 2F 71
+	   5D 20 61 62 79
+	   20 77 79 6A 9C
+	   E6 20 7A 20 70
+	   72 6F 67 72 61
+	   6D 75 2E 00
+ 00000228 0000002C		zakR dd $ - zakonczenie
+				align 4
+ 0000022C 57 79 62 72 61	wybrany db "Wybra³eœ klawisz : [ ]",0
+	   B3 65 9C 20 6B
+	   6C 61 77 69 73
+	   7A 20 3A 20 5B
+	   20 5D 00
+ 00000243 00000017		wybrR dd $ - wybrany
+				align 4
+ 00000248 57 79 6B 6F 6E	student db "Wykona³: Grzegorz Makowski i53",0
+	   61 B3 3A 20 47
+	   72 7A 65 67 6F
+	   72 7A 20 4D 61
+	   6B 6F 77 73 6B
+	   69 20 69 35 33
+	   00
+ 00000267 0000001F		stuR dd $ - student
+				align 4
+ 0000026C 50 72 6F 77 61	profesor db "Prowadz¹cy: Prof. dr hab. in¿. Aleksandr Timofiejew",0
+	   64 7A B9 63 79
+	   3A 20 50 72 6F
+	   66 2E 20 64 72
+	   20 68 61 62 2E
+	   20 69 6E BF 2E
+	   20 41 6C 65 6B
+	   73 61 6E 64 72
+	   20 54 69 6D 6F
+	   66 69 65 6A 65
+	   77 00
+ 000002A0 00000034		proR dd $ - profesor
+				align 4
+ 000002A4  00000064 [		tab dd 100 dup(0)
+	    00000000
+	   ]
+ 00000434  00000200 [		bufor db mbuf dup(0)
+	    00
+	   ]
+ 00000634 00000000		leng dd 0
+ 00000638  00000200 [		buf db mbuf dup(0)		; bufor pomocniczy
+	    00
+	   ]
+ 00000838  00000200 [		buff db mbuf dup(0)		; bufor pomocniczy
+	    00
+	   ]
+ 00000A38 00000004		zmMenu	dd 4 			; zmienna do trzymania wyniku z manu
+ 00000A3C 00000200		rbuf	dd	mbuf
+ 00000A40 00000000		rinp	dd	0 ;faktyczna iloœæ wprowadzonych znaków
+ 00000A44 00000000		ile 	dd 0
+ 00000A48 0D 0A 00		nl db 0Dh, 0Ah, 0	; nowa linia
+ 00000A4B 0D 0A 20 00		nl2	db 0Dh,0Ah,20h,0 ; nowa inne formatowanie
+ 00000A4F 0D 0A 00		nxt db 13,10,0 ; nastepny wiersz
+ 00000A52 C9			rogGL db 0c9h ; rog góra lewy
+ 00000A53 BB			rogGP db 0bbh ; róg góra prawy
+ 00000A54 CD			prosta db 0cdh ; prosta pozioma
+ 00000A55 BA			pion db 0bah    ; prosta pionowa
+ 00000A56 CC			pionL db 0cch   ; pionowa w lewe skrzyzowanie
+ 00000A57 B9			pionP db 0b9h	; pionowa w prawo skrzyzowanie
+ 00000A58 C8			rogDL db 0c8h	; róg dó³ lewy
+ 00000A59 BC			rogDP db 0bch	; róg dó³ prawy 
+ 00000A5A 20			spacja db 020h
+ 00000A5B 31 00			licznik1 db "1",0
+ 00000A5D 31 35			licznik2 db "15"
+				;--------------
+ 00000A5F 00000000		nzdarz dd ? ; iloœæ zdarzeñ
+ 00000A63 0000 0000		zapis INPUT_RECORD <>
+	   00000000 0000
+	   0000 0000 0000
+	   00000000
+ 00000A77 0000 0000		YX COORD <>
+ 00000A7B 41			symb db 'A'
+ 00000A7C 00000000		rkom dd ? ; iloœæ komórek konsoli
+ 00000A80 00000000		rfakt dd ? ; faktyczna iloœæ komórek konsoli
+ 00000A84 5A 61 6B 6F F1	wierszB db "Zakoñczyæ mo¿na klawiszami klawiszami H, I wprowadzasz znaki [ ]",0Dh,0Ah,0
+	   63 7A 79 E6 20
+	   6D 6F BF 6E 61
+	   20 6B 6C 61 77
+	   69 73 7A 61 6D
+	   69 20 6B 6C 61
+	   77 69 73 7A 61
+	   6D 69 20 48 2C
+	   20 49 20 77 70
+	   72 6F 77 61 64
+	   7A 61 73 7A 20
+	   7A 6E 61 6B 69
+	   20 5B 20 5D 0D
+	   0A 00
+				ALIGN 4
+ 00000AC8 00000044		wierszrB dd $ - wierszB ;iloœæ znaków tablicy wiersz
+ 00000ACC 00000011		niebieski dd kolorb
+ 00000AD0 000000FF		bialy dd kolorw
+ 00000AD4 00000044		czerwony dd kolorc
+ 00000AD8 00000061		atryb dd kolor2
+ 00000ADC 00000007		atryb1 dd kolor1
+				align 4
+ 00000AE0 4B 6F 6C 6F 72	tekst db "Kolory s¹ ustawione przez Grzegorza Makowskiego"
+	   79 20 73 B9 20
+	   75 73 74 61 77
+	   69 6F 6E 65 20
+	   70 72 7A 65 7A
+	   20 47 72 7A 65
+	   67 6F 72 7A 61
+	   20 4D 61 6B 6F
+	   77 73 6B 69 65
+	   67 6F
+ 00000B0F 0000002F		rozmT dd $ - tekst
+				align 4
+ 00000B14 5A 61 64 61 6E	wierszC db "Zadanie mo¿na zakoñczyæ klawiszami Lewy Alt + Lewy przycisk myszy lub "
+	   69 65 20 6D 6F
+	   BF 6E 61 20 7A
+	   61 6B 6F F1 63
+	   7A 79 E6 20 6B
+	   6C 61 77 69 73
+	   7A 61 6D 69 20
+	   4C 65 77 79 20
+	   41 6C 74 20 2B
+	   20 4C 65 77 79
+	   20 70 72 7A 79
+	   63 69 73 6B 20
+	   6D 79 73 7A 79
+	   20 6C 75 62 20
+ 00000B5A  20 6B 6C 61 77	db " klawiszami H, I lub h, i",0Dh,0Ah,0
+	   69 73 7A 61 6D
+	   69 20 48 2C 20
+	   49 20 6C 75 62
+	   20 68 2C 20 69
+	   0D 0A 00
+ 00000B76 00000062		wierszrC dd $ - wierszC ;iloœæ znaków tablicy wiersza
+				align 4
+ 00000B7C 46 52 4F 4D 5F	LeKlMyszy db "FROM_LEFT_1ST_BUTTON_PRESSED",0
+	   4C 45 46 54 5F
+	   31 53 54 5F 42
+	   55 54 54 4F 4E
+	   5F 50 52 45 53
+	   53 45 44 00
+ 00000B99 0000001D		LeKlMyszyr dd $ - LeKlMyszy
+				align 4
+				;------------------
+ 00000BA0			_data ends
+				;----------------------------------------|
+				;    Koniec segmentu danych              |
+				;----------------------------------------|
+
+				;----------------------------------------|
+				;    Poczatek segmentu kodu              |
+				;----------------------------------------|
+ 00000000			_text segment
+ 00000000			start:
+ 00000000			;--- tworzenie konsoli ---
+				INVOKE FreeConsole
+				INVOKE AllocConsole
+				;--- nag³ówek okna ---
+				INVOKE CharToOemA,OFFSET tytul,OFFSET tytul ; konwersja polskich znaków
+				INVOKE SetConsoleTitleA,OFFSET tytul
+				;--- deskryptory buforów ---
+				INVOKE GetStdHandle, STD_OUTPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 0000002A  A3 00000000 R	mov hout, EAX
+				INVOKE GetStdHandle, STD_INPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 00000036  A3 00000004 R	mov hinp, EAX
+				;--- obliczenie rozmiaru buforu ekranu
+				INVOKE GetLargestConsoleWindowSize,hout
+ 00000046  A3 00000A77 R	mov YX, EAX
+ 0000004B  0F B7 05		movzx EAX, YX.X
+	   00000A77 R
+ 00000052  0F B7 1D		movzx EBX, YX.Y
+	   00000A79 R
+ 00000059  F7 E3		mul EBX
+ 0000005B  A3 00000A7C R	mov rkom, EAX
+ 00000060  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 00000069  66| C7 05		mov YX.Y, 0
+	   00000A79 R
+	   0000
+ 00000072  E8 0000066E		call Menu
+ 00000077  66| C7 05		mov YX.X, 69
+	   00000A77 R
+	   0045
+ 00000080  66| C7 05		mov YX.Y, 22
+	   00000A79 R
+	   0016
+				INVOKE SetConsoleCursorPosition,hout,COORD PTR [YX] ;ustawienie pozycji kursora
+				;--- pêtla
+ 0000009A			powt:
+				;--- odczyt komunikatu zdarzenia
+				INVOKE FlushConsoleInputBuffer,hinp ;czyszczenie kolejki komunikatów
+				INVOKE ReadConsoleInputA,hinp,OFFSET zapis,1,OFFSET nzdarz ; odczyt komunikatu zdarzenia
+ 000000BC  66| 83 3D		cmp WORD PTR [zapis.EventType], KEY_EVENT
+	   00000A63 R 01
+ 000000C4  74 02		je @F
+ 000000C6  EB D2		jmp powt
+ 000000C8			@@:
+ 000000C8  EB 00		jmp klaw
+
+				;--- komunikat od klawiatury ---
+ 000000CA			klaw:
+ 000000CA  83 3D 00000A67 R	cmp (KEY_EVENT_RECORD PTR [zapis.KeyEvent]).bKeyDown, 0 ; porównanie z zerem
+	   00
+ 000000D1  75 02		jne @F
+ 000000D3  EB C5		jmp powt ;jeœli nie ma naciœniêcia
+ 000000D5			@@:
+ 000000D5  A0 00000A71 R	mov AL,(KEY_EVENT_RECORD PTR [zapis.KeyEvent]).ASCIIChar
+ 000000DA  A2 00000A7B R	mov symb,AL
+ 000000DF  3C 51		cmp AL, 051h ; porównanie z kodem Q
+ 000000E1  75 05		jne @F
+ 000000E3  E9 000005C9		jmp kon
+ 000000E8			@@:
+ 000000E8  3C 71		cmp AL, 071h ; porównanie z kodem q
+ 000000EA  75 05		jne @F
+ 000000EC  E9 000005C0		jmp kon
+ 000000F1			@@:
+ 000000F1  3C 41		cmp AL, 041h ; porównanie z kodem A
+ 000000F3  75 02		jne @F
+ 000000F5  EB 4C		jmp zadanie_a
+ 000000F7			@@:
+ 000000F7  3C 61		cmp AL, 061h ; porównanie z kodem a
+ 000000F9  75 02		jne @F
+ 000000FB  EB 46		jmp zadanie_a
+ 000000FD			@@:
+ 000000FD  3C 42		cmp AL, 042h ; porównanie z kodem B
+ 000000FF  75 05		jne @F
+ 00000101  E9 0000013A		jmp zadanie_b
+ 00000106			@@:
+ 00000106  3C 62		cmp AL, 062h ; porównanie z kodem b
+ 00000108  75 05		jne @F
+ 0000010A  E9 00000131		jmp zadanie_b
+ 0000010F			@@:
+ 0000010F  3C 43		cmp AL, 043h ; porównanie z kodem C
+ 00000111  75 05		jne @F
+ 00000113  E9 00000340		jmp zadanie_c
+ 00000118			@@:
+ 00000118  3C 63		cmp AL, 063h ; porównanie z kodem c
+ 0000011A  75 05		jne @F
+ 0000011C  E9 00000337		jmp zadanie_c
+ 00000121			@@:
+				INVOKE WriteConsoleOutputCharacterA,hout,OFFSET symb,1,COORD PTR [YX],OFFSET rout ; wypisywanie znaku
+ 0000013E  E9 FFFFFF57		jmp powt
+				;--------------------------------|
+				; koniec menu                    |
+				;--------------------------------|
+				;--------------------------------|
+				; Zadanie a                      |
+				;--------------------------------|
+ 00000143			zadanie_a:
+				;--- tworzenie konsoli ---
+				INVOKE FreeConsole
+				INVOKE AllocConsole
+				;--- nag³ówek okna ---
+				INVOKE CharToOemA,OFFSET tytul,OFFSET tytul ; konwersja polskich znaków
+				INVOKE SetConsoleTitleA,OFFSET tytul
+				;--- deskryptory buforów ---
+				INVOKE GetStdHandle, STD_OUTPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 0000016D  A3 00000000 R	mov hout, EAX
+				INVOKE GetStdHandle, STD_INPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 00000179  A3 00000004 R	mov hinp, EAX
+				;--- obliczenie rozmiaru buforu ekranu
+				INVOKE GetLargestConsoleWindowSize,hout
+ 00000189  A3 00000A77 R	mov YX, EAX
+ 0000018E  0F B7 05		movzx EAX, YX.X
+	   00000A77 R
+ 00000195  0F B7 1D		movzx EBX, YX.Y
+	   00000A79 R
+ 0000019C  F7 E3		mul EBX
+ 0000019E  A3 00000A7C R	mov rkom, EAX
+				;--- nape³nienie komórek jednakowym atrybutem ---
+ 000001A3  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 000001AC  66| C7 05		mov YX.Y, 0
+	   00000A79 R
+	   0000
+				;--- ustawienie koloru konsoli ---
+				INVOKE SetConsoleTextAttribute,hout,kolor1
+				INVOKE FillConsoleOutputAttribute, hout, kolor2, rkom, COORD PTR [YX], OFFSET rfakt
+				;--- wyprowadzenie komunikatu informacyjnego ---
+ 000001E0  66| C7 05		mov YX.X, 10
+	   00000A77 R
+	   000A
+ 000001E9  66| C7 05		mov YX.Y, 15
+	   00000A79 R
+	   000F
+				INVOKE SetConsoleCursorPosition, hout, YX
+				plznaki tekst, tekst 			; makro
+				wyswietl offset tekst, rozmT	; makro
+ 00000212  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000214  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000219  FF 35 00000B0F R  1		push rozmT ; iloœæ znaków
+ 0000021F  68 00000AE0 R     1		push offset offset tekst ; wska¿nik na tekst w buforze
+ 00000224  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 0000022A  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- opóŸnienie zamkniêcia okna ---
+ 0000022F  B9 7FFFFFFF		mov ECX, 07FFFFFFFh
+ 00000234  E2 FE		etykA: loop etykA
+				;--- zamkniêcie konsoli
+ 00000236			konA:
+				INVOKE FreeConsole
+ 0000023B  E9 FFFFFDC0		jmp start
+				;---------------------------|
+				; koniec zadania a          |
+				;---------------------------|
+				;---------------------------|
+				; Zadanie b                 |
+				;---------------------------|
+ 00000240			zadanie_b:
+				;--- tworzenie konsoli ---
+				INVOKE FreeConsole
+				INVOKE AllocConsole
+				;--- nag³ówek okna ---
+				INVOKE CharToOemA,OFFSET tytul,OFFSET tytul ; konwersja polskich znaków
+				INVOKE SetConsoleTitleA,OFFSET tytul
+				;--- deskryptory buforów ---
+				INVOKE GetStdHandle, STD_OUTPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 0000026A  A3 00000000 R	mov hout, EAX
+				INVOKE GetStdHandle, STD_INPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 00000276  A3 00000004 R	mov hinp, EAX
+				;--- obliczenie rozmiaru buforu ekranu
+				INVOKE GetLargestConsoleWindowSize,hout
+ 00000286  A3 00000A77 R	mov YX, EAX
+ 0000028B  0F B7 05		movzx EAX, YX.X
+	   00000A77 R
+ 00000292  0F B7 1D		movzx EBX, YX.Y
+	   00000A79 R
+ 00000299  F7 E3		mul EBX
+ 0000029B  A3 00000A7C R	mov rkom, EAX
+				;--- nape³nienie komórek jednakowym atrybutem ---
+ 000002A0  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 000002A9  66| C7 05		mov YX.Y, 0
+	   00000A79 R
+	   0000
+				INVOKE FillConsoleOutputAttribute,hout,niebieski,rkom, \
+				COORD PTR [YX],OFFSET rfakt
+				;--- wyprowadzenie komunikatu informacyjnego ---
+ 000002D4  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 000002DD  66| C7 05		mov YX.Y, 29
+	   00000A79 R
+	   001D
+				INVOKE SetConsoleCursorPosition, hout, YX
+				INVOKE SetConsoleTextAttribute,hout,atryb1
+				plznaki wierszB, wierszB
+				wyswietl offset wierszB, wierszrB
+ 00000317  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000319  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000031E  FF 35 00000AC8 R  1		push wierszrB ; iloœæ znaków
+ 00000324  68 00000A84 R     1		push offset offset wierszB ; wska¿nik na tekst w buforze
+ 00000329  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 0000032F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- ustawienie kursora
+ 00000334  66| C7 05		mov YX.X, 62
+	   00000A77 R
+	   003E
+ 0000033D  66| C7 05		mov YX.Y, 29
+	   00000A79 R
+	   001D
+				INVOKE SetConsoleCursorPosition,hout,COORD PTR [YX] ;ustawienie pozycji kursora
+				;--- pêtla
+ 00000357			powtB:
+				;--- odczyt komunikatu zdarzenia
+				INVOKE FlushConsoleInputBuffer,hinp ;czyszczenie kolejki komunikatów
+				INVOKE ReadConsoleInputA,hinp,OFFSET zapis,1,OFFSET nzdarz ; odczyt komunikatu zdarzenia
+				;--- sprawdzanie typu zdarzenia
+ 00000379  66| 83 3D		cmp WORD PTR [zapis.EventType], KEY_EVENT
+	   00000A63 R 01
+ 00000381  74 02		je @F
+ 00000383  EB D2		jmp powtB
+ 00000385			@@:
+ 00000385  EB 11		jmp klawB
+				INVOKE SetConsoleCursorPosition,hout,COORD PTR [YX] ; ustawienie pozycji kursora
+				;--- komunikat od klawiatury ---
+ 00000398			klawB:
+ 00000398  83 3D 00000A67 R	cmp (KEY_EVENT_RECORD PTR [zapis.KeyEvent]).bKeyDown, 0 ; porównanie z zerem
+	   00
+ 0000039F  75 02		jne @F
+ 000003A1  EB B4		jmp powtB ;jeœli nie ma naciœniêcia
+ 000003A3			@@:
+ 000003A3  A0 00000A71 R	mov AL,(KEY_EVENT_RECORD PTR [zapis.KeyEvent]).ASCIIChar
+ 000003A8  A2 00000A7B R	mov symb,AL
+ 000003AD  3C 48		cmp AL, 048h ; porównanie z kodem H
+ 000003AF  75 02		jne @F
+ 000003B1  EB 28		jmp etykB
+ 000003B3			@@:
+ 000003B3  3C 68		cmp AL, 068h ; porównanie z kodem h
+ 000003B5  75 02		jne @F
+ 000003B7  EB 22		jmp etykB
+ 000003B9			@@:
+				INVOKE WriteConsoleOutputCharacterA,hout,OFFSET symb,1,COORD PTR [YX],OFFSET rout ; wypisywanie znaku
+ 000003D6  E9 FFFFFF7C		jmp powtB
+ 000003DB			etykB:
+				INVOKE FlushConsoleInputBuffer,hinp ;czyszczenie kolejki komunikatów
+				INVOKE ReadConsoleInputA,hinp,OFFSET zapis,1,OFFSET nzdarz ; odczyt komunikatu zdarzenia
+ 000003FD  66| 83 3D		cmp WORD PTR [zapis.EventType], KEY_EVENT
+	   00000A63 R 01
+ 00000405  74 02		je @F
+ 00000407  EB D2		jmp etykB
+ 00000409			@@:
+ 00000409  EB 00		jmp klaw2B
+ 0000040B			klaw2B:
+ 0000040B  83 3D 00000A67 R	cmp (KEY_EVENT_RECORD PTR [zapis.KeyEvent]).bKeyDown, 0 ; porównanie z zerem
+	   00
+ 00000412  75 02		jne @F
+ 00000414  EB C5		jmp etykB ;jeœli nie ma naciœniêcia
+ 00000416			@@:
+ 00000416  A0 00000A71 R	mov AL,(KEY_EVENT_RECORD PTR [zapis.KeyEvent]).ASCIIChar
+ 0000041B  A2 00000A7B R	mov symb,AL
+ 00000420  3C 49		cmp AL, 049h ; porównanie z kodem I
+ 00000422  75 02		jne @F
+ 00000424  EB 28		jmp konB
+ 00000426			@@:
+ 00000426  3C 69		cmp AL, 069h ; porównanie z kodem i
+ 00000428  75 02		jne @F
+ 0000042A  EB 22		jmp konB
+ 0000042C			@@:
+				INVOKE WriteConsoleOutputCharacterA,hout,OFFSET symb,1,COORD PTR [YX],OFFSET rout ; wypisywanie znaku
+ 00000449  E9 FFFFFF09		jmp powtB
+				;--- zamkniêcie konsoli
+ 0000044E			konB:
+				INVOKE FreeConsole
+ 00000453  E9 FFFFFBA8		jmp start
+				;--------------------------------|
+				; Koniec zadania B               |
+				;--------------------------------|
+
+				;--------------------------------|
+				; Zadanie C                      |
+				;--------------------------------|
+ 00000458			zadanie_c:
+				;--- tworzenie konsoli ---
+				INVOKE FreeConsole
+				INVOKE AllocConsole
+				;--- nag³ówek okna ---
+				INVOKE CharToOemA,OFFSET tytul,OFFSET tytul ; konwersja polskich znaków
+				INVOKE SetConsoleTitleA,OFFSET tytul
+				;--- deskryptory buforów ---
+				INVOKE GetStdHandle, STD_OUTPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 00000482  A3 00000000 R	mov hout, EAX
+				INVOKE GetStdHandle, STD_INPUT_HANDLE ; wywo³anie funkcji GetStdHandle
+ 0000048E  A3 00000004 R	mov hinp, EAX
+				;--- obliczenie rozmiaru buforu ekranu
+				INVOKE GetLargestConsoleWindowSize,hout
+ 0000049E  A3 00000A77 R	mov YX, EAX
+ 000004A3  0F B7 05		movzx EAX, YX.X
+	   00000A77 R
+ 000004AA  0F B7 1D		movzx EBX, YX.Y
+	   00000A79 R
+ 000004B1  F7 E3		mul EBX
+ 000004B3  A3 00000A7C R	mov rkom, EAX
+				;--- nape³nienie komórek jednakowym atrybutem ---
+ 000004B8  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 000004C1  66| C7 05		mov YX.Y, 0
+	   00000A79 R
+	   0000
+				INVOKE FillConsoleOutputAttribute,hout,czerwony,rkom, \
+				COORD PTR [YX],OFFSET rfakt
+				;--- wyprowadzenie komunikatu informacyjnego ---
+ 000004EC  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 000004F5  66| C7 05		mov YX.Y, 29
+	   00000A79 R
+	   001D
+				INVOKE SetConsoleCursorPosition, hout, YX
+				INVOKE SetConsoleTextAttribute,hout,atryb1
+				plznaki wierszC, wierszC
+				wyswietl offset wierszC, wierszrC
+ 0000052F  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000531  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000536  FF 35 00000B76 R  1		push wierszrC ; iloœæ znaków
+ 0000053C  68 00000B14 R     1		push offset offset wierszC ; wska¿nik na tekst w buforze
+ 00000541  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000547  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				;--- ustawienie kursora
+ 0000054C  66| C7 05		mov YX.X, 0
+	   00000A77 R
+	   0000
+ 00000555  66| C7 05		mov YX.Y, 1
+	   00000A79 R
+	   0001
+				INVOKE SetConsoleCursorPosition,hout,COORD PTR [YX] ;ustawienie pozycji kursora
+				;--- pêtla
+ 0000056F			powtC:
+				;--- odczyt komunikatu zdarzenia
+				INVOKE FlushConsoleInputBuffer,hinp ;czyszczenie kolejki komunikatów
+				INVOKE ReadConsoleInputA,hinp,OFFSET zapis,1,OFFSET nzdarz ; odczyt komunikatu zdarzenia
+				;--- sprawdzanie typu zdarzenia
+ 00000591  66| 83 3D		cmp WORD PTR [zapis.EventType], MOUSE_EVENT
+	   00000A63 R 02
+ 00000599  74 0C		je myszC
+ 0000059B  66| 83 3D		cmp WORD PTR [zapis.EventType], KEY_EVENT
+	   00000A63 R 01
+ 000005A3  74 3E		je klawC
+ 000005A5  EB C8		jmp powtC
+				;--- komunikat od myszy
+ 000005A7			myszC:
+ 000005A7  F7 05 00000A6B R	test (MOUSE_EVENT_RECORD PTR [zapis.MouseEvent]).dwButtonState, FROM_LEFT_1ST_BUTTON_PRESSED
+	   00000001
+ 000005B1  75 02		jnz @F
+ 000005B3  EB BA		jmp powtC ; na koniec programu
+ 000005B5			@@:
+ 000005B5  F7 05 00000A6F R	test (MOUSE_EVENT_RECORD PTR [zapis.MouseEvent]).dwControlKeyState, LEFT_ALT_PRESSED
+	   00000002
+ 000005BF  74 05		jz @F
+ 000005C1  E9 000000E1		jmp konC
+ 000005C6			@@:
+				;--- jest naciœniêty prawy klawisz myszy
+ 000005C6  A1 00000A67 R	mov EAX, (MOUSE_EVENT_RECORD PTR [zapis.MouseEvent]).dwMousePosition ; wspó³rzêdne X,Y
+ 000005CB  A3 00000A77 R	mov COORD PTR [YX], EAX ; wspó³rzêdne X,Y
+				INVOKE SetConsoleCursorPosition,hout,COORD PTR [YX] ; ustawienie pozycji kursora
+ 000005E1  EB 8C		jmp powtC
+				;--- komunikat od klawiatury ---
+ 000005E3			klawC:
+ 000005E3  83 3D 00000A67 R	cmp (KEY_EVENT_RECORD PTR [zapis.KeyEvent]).bKeyDown, 0 ; porównanie z zerem
+	   00
+ 000005EA  75 02		jne @F
+ 000005EC  EB 81		jmp powtC ;jeœli nie ma naciœniêcia
+ 000005EE			@@:
+ 000005EE  A0 00000A71 R	mov AL,(KEY_EVENT_RECORD PTR [zapis.KeyEvent]).ASCIIChar
+ 000005F3  A2 00000A7B R	mov symb,AL
+ 000005F8  3C 48		cmp AL, 048h ; porównanie z kodem H
+ 000005FA  75 02		jne @F
+ 000005FC  EB 28		jmp etykC
+ 000005FE			@@:
+ 000005FE  3C 68		cmp AL, 068h ; porównanie z kodem h
+ 00000600  75 02		jne @F
+ 00000602  EB 22		jmp etykC
+ 00000604			@@:
+				INVOKE WriteConsoleOutputCharacterA,hout,OFFSET symb,1,COORD PTR [YX],OFFSET rout ; wypisywanie znaku
+ 00000621  E9 FFFFFF49		jmp powtC
+ 00000626			etykC:
+				INVOKE FlushConsoleInputBuffer,hinp ;czyszczenie kolejki komunikatów
+				INVOKE ReadConsoleInputA,hinp,OFFSET zapis,1,OFFSET nzdarz ; odczyt komunikatu zdarzenia
+ 00000648  66| 83 3D		cmp WORD PTR [zapis.EventType], MOUSE_EVENT
+	   00000A63 R 02
+ 00000650  0F 84 FFFFFF51	je myszC
+ 00000656  66| 83 3D		cmp WORD PTR [zapis.EventType], KEY_EVENT
+	   00000A63 R 01
+ 0000065E  74 02		je @F
+ 00000660  EB C4		jmp etykC
+ 00000662			@@:
+ 00000662  EB 00		jmp klaw2C
+ 00000664			klaw2C:
+ 00000664  83 3D 00000A67 R	cmp (KEY_EVENT_RECORD PTR [zapis.KeyEvent]).bKeyDown, 0 ; porównanie z zerem
+	   00
+ 0000066B  75 02		jne @F
+ 0000066D  EB B7		jmp etykC ;jeœli nie ma naciœniêcia
+ 0000066F			@@:
+ 0000066F  A0 00000A71 R	mov AL,(KEY_EVENT_RECORD PTR [zapis.KeyEvent]).ASCIIChar
+ 00000674  A2 00000A7B R	mov symb,AL
+ 00000679  3C 49		cmp AL, 049h ; porównanie z kodem I
+ 0000067B  75 02		jne @F
+ 0000067D  EB 28		jmp konC
+ 0000067F			@@:
+ 0000067F  3C 69		cmp AL, 069h ; porównanie z kodem i
+ 00000681  75 02		jne @F
+ 00000683  EB 22		jmp konC
+ 00000685			@@:
+				INVOKE WriteConsoleOutputCharacterA,hout,OFFSET symb,1,COORD PTR [YX],OFFSET rout ; wypisywanie znaku
+ 000006A2  E9 FFFFFEC8		jmp powtC
+				;--- zamkniêcie konsoli
+ 000006A7			konC:
+				INVOKE FreeConsole
+ 000006AC  E9 FFFFF94F		jmp start
+				;--------------------------------|
+				; Koniec zadania C               |
+				;--------------------------------|
+ 000006B1			kon:
+				;--- zamkniêcie konsoli
+				INVOKE FreeConsole
+				;----- wywo³anie funkcji ExitProcess ---------
+				invoke ExitProcess,0
+				;podprogramy
+				;--------------------------------|
+				; czyszczenie ekranu             |
+				;--------------------------------|
+ 000006BD 000006BD		Cls proc
+ 000006BD  B3 01		mov bl,1
+ 000006BF			@@:
+ 000006BF  80 FB 50			cmp bl, 50h
+ 000006C2  74 1E			je @F
+					wyswietl nl,2
+ 000006C4  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000006C6  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000006CB  6A 02	     1		push 2 ; iloœæ znaków
+ 000006CD  68 00000A48 R     1		push offset nl ; wska¿nik na tekst w buforze
+ 000006D2  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000006D8  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000006DD  80 C3 01			add bl, 1
+ 000006E0  EB DD			jmp @B
+ 000006E2			@@:
+ 000006E2  B3 00		mov bl,0
+ 000006E4  C3			ret
+ 000006E5			Cls endp
+				;---------------------------------|
+				; Rysowanie menu programu         |
+				;---------------------------------|
+ 000006E5			Menu proc
+				;--- rysuje menu programu ----
+				wyswietl rogGL, 1 	; wyswietlenie leweg rogu tabelki
+ 000006E5  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000006E7  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000006EC  6A 01	     1		push 1 ; iloœæ znaków
+ 000006EE  68 00000A52 R     1		push offset rogGL ; wska¿nik na tekst w buforze
+ 000006F3  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000006F9  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak prosta, 118 ; wyswietla przyjety znak 118 razy
+ 000006FE  B3 01	     1	mov bl,1
+ 00000700		     1	@@:
+ 00000700  80 FB 76	     1		cmp bl,118
+ 00000703  74 1E	     1		je @F
+ 00000705  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000707  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000070C  6A 01	     2		push 1 ; iloœæ znaków
+ 0000070E  68 00000A54 R     2		push offset prosta ; wska¿nik na tekst w buforze
+ 00000713  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000719  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000071E  80 C3 01	     1		add bl,1
+ 00000721  EB DD	     1		jmp @B
+ 00000723		     1	@@:
+				wyswietl rogGP, 1 	; wyœwietlanie prawego rogu tabelki 
+ 00000723  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000725  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000072A  6A 01	     1		push 1 ; iloœæ znaków
+ 0000072C  68 00000A53 R     1		push offset rogGP ; wska¿nik na tekst w buforze
+ 00000731  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000737  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 	; makro	
+ 0000073C  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000073E  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000743  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000745  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 0000074A  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000750  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000755  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000757  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000075C  6A 01	     1		push 1 ; iloœæ znaków
+ 0000075E  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000763  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000769  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 0000076E  B3 01	     1	mov bl,1
+ 00000770		     1	@@:
+ 00000770  80 FB 76	     1		cmp bl,118
+ 00000773  74 1E	     1		je @F
+ 00000775  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000777  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000077C  6A 01	     2		push 1 ; iloœæ znaków
+ 0000077E  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000783  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000789  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000078E  80 C3 01	     1		add bl,1
+ 00000791  EB DD	     1		jmp @B
+ 00000793		     1	@@:
+				wyswietl pion,1
+ 00000793  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000795  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000079A  6A 01	     1		push 1 ; iloœæ znaków
+ 0000079C  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000007A1  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000007A7  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 000007AC  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000007AE  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000007B3  6A 02	     1		push	2		        ; iloœæ znaków
+ 000007B5  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000007BA  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000007C0  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 000007C5  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000007C7  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000007CC  6A 01	     1		push 1 ; iloœæ znaków
+ 000007CE  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000007D3  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000007D9  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 45
+ 000007DE  B3 01	     1	mov bl,1
+ 000007E0		     1	@@:
+ 000007E0  80 FB 2D	     1		cmp bl,45
+ 000007E3  74 1E	     1		je @F
+ 000007E5  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000007E7  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000007EC  6A 01	     2		push 1 ; iloœæ znaków
+ 000007EE  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000007F3  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000007F9  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000007FE  80 C3 01	     1		add bl,1
+ 00000801  EB DD	     1		jmp @B
+ 00000803		     1	@@:
+				plznaki szkola1, szkola1
+				wyswietl offset szkola1, sz1
+ 00000812  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000814  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000819  FF 35 00000029 R  1		push sz1 ; iloœæ znaków
+ 0000081F  68 0000000C R     1		push offset offset szkola1 ; wska¿nik na tekst w buforze
+ 00000824  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 0000082A  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 45
+ 0000082F  B3 01	     1	mov bl,1
+ 00000831		     1	@@:
+ 00000831  80 FB 2D	     1		cmp bl,45
+ 00000834  74 1E	     1		je @F
+ 00000836  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000838  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000083D  6A 01	     2		push 1 ; iloœæ znaków
+ 0000083F  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000844  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 0000084A  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000084F  80 C3 01	     1		add bl,1
+ 00000852  EB DD	     1		jmp @B
+ 00000854		     1	@@:
+				wyswietl pion,1
+ 00000854  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000856  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000085B  6A 01	     1		push 1 ; iloœæ znaków
+ 0000085D  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000862  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000868  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 0000086D  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000086F  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000874  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000876  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 0000087B  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000881  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000886  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000888  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000088D  6A 01	     1		push 1 ; iloœæ znaków
+ 0000088F  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000894  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 0000089A  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 49
+ 0000089F  B3 01	     1	mov bl,1
+ 000008A1		     1	@@:
+ 000008A1  80 FB 31	     1		cmp bl,49
+ 000008A4  74 1E	     1		je @F
+ 000008A6  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000008A8  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000008AD  6A 01	     2		push 1 ; iloœæ znaków
+ 000008AF  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000008B4  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000008BA  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000008BF  80 C3 01	     1		add bl,1
+ 000008C2  EB DD	     1		jmp @B
+ 000008C4		     1	@@:
+				plznaki szkola2, szkola2
+				wyswietl offset szkola2, sz2
+ 000008D3  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000008D5  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000008DA  FF 35 00000045 R  1		push sz2 ; iloœæ znaków
+ 000008E0  68 00000030 R     1		push offset offset szkola2 ; wska¿nik na tekst w buforze
+ 000008E5  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000008EB  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 49
+ 000008F0  B3 01	     1	mov bl,1
+ 000008F2		     1	@@:
+ 000008F2  80 FB 31	     1		cmp bl,49
+ 000008F5  74 1E	     1		je @F
+ 000008F7  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000008F9  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000008FE  6A 01	     2		push 1 ; iloœæ znaków
+ 00000900  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000905  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 0000090B  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000910  80 C3 01	     1		add bl,1
+ 00000913  EB DD	     1		jmp @B
+ 00000915		     1	@@:
+				wyswietl pion,1
+ 00000915  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000917  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000091C  6A 01	     1		push 1 ; iloœæ znaków
+ 0000091E  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000923  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000929  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 0000092E  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000930  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000935  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000937  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 0000093C  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000942  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000947  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000949  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000094E  6A 01	     1		push 1 ; iloœæ znaków
+ 00000950  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000955  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 0000095B  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00000960  B3 01	     1	mov bl,1
+ 00000962		     1	@@:
+ 00000962  80 FB 76	     1		cmp bl,118
+ 00000965  74 1E	     1		je @F
+ 00000967  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000969  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000096E  6A 01	     2		push 1 ; iloœæ znaków
+ 00000970  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000975  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 0000097B  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000980  80 C3 01	     1		add bl,1
+ 00000983  EB DD	     1		jmp @B
+ 00000985		     1	@@:
+				wyswietl pion,1
+ 00000985  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000987  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000098C  6A 01	     1		push 1 ; iloœæ znaków
+ 0000098E  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000993  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000999  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 
+ 0000099E  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000009A0  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000009A5  6A 02	     1		push	2		        ; iloœæ znaków
+ 000009A7  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000009AC  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000009B2  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 000009B7  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000009B9  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000009BE  6A 01	     1		push 1 ; iloœæ znaków
+ 000009C0  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000009C5  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000009CB  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 39
+ 000009D0  B3 01	     1	mov bl,1
+ 000009D2		     1	@@:
+ 000009D2  80 FB 27	     1		cmp bl,39
+ 000009D5  74 1E	     1		je @F
+ 000009D7  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000009D9  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000009DE  6A 01	     2		push 1 ; iloœæ znaków
+ 000009E0  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000009E5  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000009EB  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000009F0  80 C3 01	     1		add bl,1
+ 000009F3  EB DD	     1		jmp @B
+ 000009F5		     1	@@:
+				plznaki szkola3, szkola3
+				wyswietl offset szkola3, sz3
+ 00000A04  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000A06  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000A0B  FF 35 00000076 R  1		push sz3 ; iloœæ znaków
+ 00000A11  68 0000004C R     1		push offset offset szkola3 ; wska¿nik na tekst w buforze
+ 00000A16  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000A1C  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 38
+ 00000A21  B3 01	     1	mov bl,1
+ 00000A23		     1	@@:
+ 00000A23  80 FB 26	     1		cmp bl,38
+ 00000A26  74 1E	     1		je @F
+ 00000A28  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000A2A  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000A2F  6A 01	     2		push 1 ; iloœæ znaków
+ 00000A31  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000A36  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000A3C  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000A41  80 C3 01	     1		add bl,1
+ 00000A44  EB DD	     1		jmp @B
+ 00000A46		     1	@@:
+				wyswietl pion,1
+ 00000A46  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000A48  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000A4D  6A 01	     1		push 1 ; iloœæ znaków
+ 00000A4F  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000A54  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000A5A  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000A5F  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000A61  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000A66  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000A68  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000A6D  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000A73  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000A78  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000A7A  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000A7F  6A 01	     1		push 1 ; iloœæ znaków
+ 00000A81  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000A86  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000A8C  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00000A91  B3 01	     1	mov bl,1
+ 00000A93		     1	@@:
+ 00000A93  80 FB 76	     1		cmp bl,118
+ 00000A96  74 1E	     1		je @F
+ 00000A98  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000A9A  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000A9F  6A 01	     2		push 1 ; iloœæ znaków
+ 00000AA1  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000AA6  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000AAC  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000AB1  80 C3 01	     1		add bl,1
+ 00000AB4  EB DD	     1		jmp @B
+ 00000AB6		     1	@@:
+				wyswietl pion,1
+ 00000AB6  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000AB8  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000ABD  6A 01	     1		push 1 ; iloœæ znaków
+ 00000ABF  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000AC4  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000ACA  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000ACF  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000AD1  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000AD6  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000AD8  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000ADD  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000AE3  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000AE8  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000AEA  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000AEF  6A 01	     1		push 1 ; iloœæ znaków
+ 00000AF1  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000AF6  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000AFC  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 46
+ 00000B01  B3 01	     1	mov bl,1
+ 00000B03		     1	@@:
+ 00000B03  80 FB 2E	     1		cmp bl,46
+ 00000B06  74 1E	     1		je @F
+ 00000B08  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000B0A  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000B0F  6A 01	     2		push 1 ; iloœæ znaków
+ 00000B11  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000B16  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000B1C  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000B21  80 C3 01	     1		add bl,1
+ 00000B24  EB DD	     1		jmp @B
+ 00000B26		     1	@@:
+				plznaki szkola4, szkola4
+				wyswietl offset szkola4, sz4
+ 00000B35  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000B37  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000B3C  FF 35 00000097 R  1		push sz4 ; iloœæ znaków
+ 00000B42  68 0000007C R     1		push offset offset szkola4 ; wska¿nik na tekst w buforze
+ 00000B47  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000B4D  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 46
+ 00000B52  B3 01	     1	mov bl,1
+ 00000B54		     1	@@:
+ 00000B54  80 FB 2E	     1		cmp bl,46
+ 00000B57  74 1E	     1		je @F
+ 00000B59  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000B5B  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000B60  6A 01	     2		push 1 ; iloœæ znaków
+ 00000B62  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000B67  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000B6D  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000B72  80 C3 01	     1		add bl,1
+ 00000B75  EB DD	     1		jmp @B
+ 00000B77		     1	@@:
+				wyswietl pion,1
+ 00000B77  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000B79  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000B7E  6A 01	     1		push 1 ; iloœæ znaków
+ 00000B80  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000B85  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000B8B  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 
+ 00000B90  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000B92  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000B97  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000B99  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000B9E  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000BA4  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000BA9  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000BAB  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000BB0  6A 01	     1		push 1 ; iloœæ znaków
+ 00000BB2  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000BB7  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000BBD  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 54
+ 00000BC2  B3 01	     1	mov bl,1
+ 00000BC4		     1	@@:
+ 00000BC4  80 FB 36	     1		cmp bl,54
+ 00000BC7  74 1E	     1		je @F
+ 00000BC9  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000BCB  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000BD0  6A 01	     2		push 1 ; iloœæ znaków
+ 00000BD2  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000BD7  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000BDD  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000BE2  80 C3 01	     1		add bl,1
+ 00000BE5  EB DD	     1		jmp @B
+ 00000BE7		     1	@@:
+				plznaki szkola5, szkola5
+				wyswietl offset szkola5, sz5
+ 00000BF6  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000BF8  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000BFD  FF 35 000000A8 R  1		push sz5 ; iloœæ znaków
+ 00000C03  68 0000009C R     1		push offset offset szkola5 ; wska¿nik na tekst w buforze
+ 00000C08  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000C0E  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 53
+ 00000C13  B3 01	     1	mov bl,1
+ 00000C15		     1	@@:
+ 00000C15  80 FB 35	     1		cmp bl,53
+ 00000C18  74 1E	     1		je @F
+ 00000C1A  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000C1C  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000C21  6A 01	     2		push 1 ; iloœæ znaków
+ 00000C23  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000C28  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000C2E  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000C33  80 C3 01	     1		add bl,1
+ 00000C36  EB DD	     1		jmp @B
+ 00000C38		     1	@@:
+				wyswietl pion,1
+ 00000C38  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000C3A  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000C3F  6A 01	     1		push 1 ; iloœæ znaków
+ 00000C41  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000C46  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000C4C  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000C51  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000C53  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000C58  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000C5A  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000C5F  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000C65  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000C6A  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000C6C  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000C71  6A 01	     1		push 1 ; iloœæ znaków
+ 00000C73  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000C78  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000C7E  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00000C83  B3 01	     1	mov bl,1
+ 00000C85		     1	@@:
+ 00000C85  80 FB 76	     1		cmp bl,118
+ 00000C88  74 1E	     1		je @F
+ 00000C8A  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000C8C  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000C91  6A 01	     2		push 1 ; iloœæ znaków
+ 00000C93  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000C98  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000C9E  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000CA3  80 C3 01	     1		add bl,1
+ 00000CA6  EB DD	     1		jmp @B
+ 00000CA8		     1	@@:
+				wyswietl pion,1
+ 00000CA8  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000CAA  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000CAF  6A 01	     1		push 1 ; iloœæ znaków
+ 00000CB1  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000CB6  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000CBC  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000CC1  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000CC3  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000CC8  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000CCA  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000CCF  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000CD5  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000CDA  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000CDC  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000CE1  6A 01	     1		push 1 ; iloœæ znaków
+ 00000CE3  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000CE8  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000CEE  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 34
+ 00000CF3  B3 01	     1	mov bl,1
+ 00000CF5		     1	@@:
+ 00000CF5  80 FB 22	     1		cmp bl,34
+ 00000CF8  74 1E	     1		je @F
+ 00000CFA  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000CFC  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000D01  6A 01	     2		push 1 ; iloœæ znaków
+ 00000D03  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000D08  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000D0E  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000D13  80 C3 01	     1		add bl,1
+ 00000D16  EB DD	     1		jmp @B
+ 00000D18		     1	@@:
+				plznaki szkola6, szkola6
+				wyswietl offset szkola6, sz6
+ 00000D27  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000D29  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000D2E  FF 35 000000E0 R  1		push sz6 ; iloœæ znaków
+ 00000D34  68 000000AC R     1		push offset offset szkola6 ; wska¿nik na tekst w buforze
+ 00000D39  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000D3F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 33
+ 00000D44  B3 01	     1	mov bl,1
+ 00000D46		     1	@@:
+ 00000D46  80 FB 21	     1		cmp bl,33
+ 00000D49  74 1E	     1		je @F
+ 00000D4B  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000D4D  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000D52  6A 01	     2		push 1 ; iloœæ znaków
+ 00000D54  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000D59  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000D5F  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000D64  80 C3 01	     1		add bl,1
+ 00000D67  EB DD	     1		jmp @B
+ 00000D69		     1	@@:
+				wyswietl pion,1
+ 00000D69  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000D6B  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000D70  6A 01	     1		push 1 ; iloœæ znaków
+ 00000D72  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000D77  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000D7D  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000D82  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000D84  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000D89  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000D8B  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000D90  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000D96  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000D9B  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000D9D  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000DA2  6A 01	     1		push 1 ; iloœæ znaków
+ 00000DA4  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000DA9  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000DAF  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00000DB4  B3 01	     1	mov bl,1
+ 00000DB6		     1	@@:
+ 00000DB6  80 FB 76	     1		cmp bl,118
+ 00000DB9  74 1E	     1		je @F
+ 00000DBB  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000DBD  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000DC2  6A 01	     2		push 1 ; iloœæ znaków
+ 00000DC4  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000DC9  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000DCF  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000DD4  80 C3 01	     1		add bl,1
+ 00000DD7  EB DD	     1		jmp @B
+ 00000DD9		     1	@@:
+				wyswietl pion,1
+ 00000DD9  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000DDB  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000DE0  6A 01	     1		push 1 ; iloœæ znaków
+ 00000DE2  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000DE7  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000DED  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000DF2  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000DF4  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000DF9  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000DFB  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000E00  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000E06  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	; wyœwietlenie pionowej linii
+ 00000E0B  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000E0D  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000E12  6A 01	     1		push 1 ; iloœæ znaków
+ 00000E14  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000E19  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000E1F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 48 ; wyswietla przyjety znak 118 razy
+ 00000E24  B3 01	     1	mov bl,1
+ 00000E26		     1	@@:
+ 00000E26  80 FB 30	     1		cmp bl,48
+ 00000E29  74 1E	     1		je @F
+ 00000E2B  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000E2D  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000E32  6A 01	     2		push 1 ; iloœæ znaków
+ 00000E34  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000E39  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000E3F  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000E44  80 C3 01	     1		add bl,1
+ 00000E47  EB DD	     1		jmp @B
+ 00000E49		     1	@@:
+				wyswietl offset menuTekst, menuR	; tekst 
+ 00000E49  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000E4B  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000E50  FF 35 00000153 R  1		push menuR ; iloœæ znaków
+ 00000E56  68 0000013C R     1		push offset offset menuTekst ; wska¿nik na tekst w buforze
+ 00000E5B  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000E61  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja,48
+ 00000E66  B3 01	     1	mov bl,1
+ 00000E68		     1	@@:
+ 00000E68  80 FB 30	     1		cmp bl,48
+ 00000E6B  74 1E	     1		je @F
+ 00000E6D  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000E6F  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000E74  6A 01	     2		push 1 ; iloœæ znaków
+ 00000E76  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000E7B  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000E81  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000E86  80 C3 01	     1		add bl,1
+ 00000E89  EB DD	     1		jmp @B
+ 00000E8B		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii 
+ 00000E8B  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000E8D  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000E92  6A 01	     1		push 1 ; iloœæ znaków
+ 00000E94  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000E99  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000E9F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 	; makro
+ 00000EA4  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000EA6  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000EAB  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000EAD  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000EB2  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000EB8  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000EBD  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000EBF  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000EC4  6A 01	     1		push 1 ; iloœæ znaków
+ 00000EC6  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000ECB  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000ED1  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00000ED6  B3 01	     1	mov bl,1
+ 00000ED8		     1	@@:
+ 00000ED8  80 FB 76	     1		cmp bl,118
+ 00000EDB  74 1E	     1		je @F
+ 00000EDD  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000EDF  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000EE4  6A 01	     2		push 1 ; iloœæ znaków
+ 00000EE6  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000EEB  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000EF1  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000EF6  80 C3 01	     1		add bl,1
+ 00000EF9  EB DD	     1		jmp @B
+ 00000EFB		     1	@@:
+				wyswietl pion,1
+ 00000EFB  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000EFD  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000F02  6A 01	     1		push 1 ; iloœæ znaków
+ 00000F04  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000F09  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000F0F  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00000F14  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000F16  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000F1B  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000F1D  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000F22  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000F28  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	
+ 00000F2D  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000F2F  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000F34  6A 01	     1		push 1 ; iloœæ znaków
+ 00000F36  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000F3B  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000F41  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 ;	; wyœwietlenie pionowej linii
+ 00000F46  B3 01	     1	mov bl,1
+ 00000F48		     1	@@:
+ 00000F48  80 FB 2B	     1		cmp bl,43
+ 00000F4B  74 1E	     1		je @F
+ 00000F4D  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000F4F  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000F54  6A 01	     2		push 1 ; iloœæ znaków
+ 00000F56  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000F5B  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000F61  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000F66  80 C3 01	     1		add bl,1
+ 00000F69  EB DD	     1		jmp @B
+ 00000F6B		     1	@@:
+				plznaki  zadanieA, zadanieA	; konwersja polskich znaków
+				wyswietl offset zadanieA, rozmA	; tekst
+ 00000F7A  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000F7C  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000F81  FF 35 000001A5 R  1		push rozmA ; iloœæ znaków
+ 00000F87  68 00000184 R     1		push offset offset zadanieA ; wska¿nik na tekst w buforze
+ 00000F8C  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000F92  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 00000F97  B3 01	     1	mov bl,1
+ 00000F99		     1	@@:
+ 00000F99  80 FB 2B	     1		cmp bl,43
+ 00000F9C  74 1E	     1		je @F
+ 00000F9E  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00000FA0  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000FA5  6A 01	     2		push 1 ; iloœæ znaków
+ 00000FA7  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00000FAC  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00000FB2  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00000FB7  80 C3 01	     1		add bl,1
+ 00000FBA  EB DD	     1		jmp @B
+ 00000FBC		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 00000FBC  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000FBE  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000FC3  6A 01	     1		push 1 ; iloœæ znaków
+ 00000FC5  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000FCA  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00000FD0  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 	; makro
+ 00000FD5  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00000FD7  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00000FDC  6A 02	     1		push	2		        ; iloœæ znaków
+ 00000FDE  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00000FE3  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00000FE9  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00000FEE  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00000FF0  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00000FF5  6A 01	     1		push 1 ; iloœæ znaków
+ 00000FF7  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00000FFC  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001002  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00001007  B3 01	     1	mov bl,1
+ 00001009		     1	@@:
+ 00001009  80 FB 76	     1		cmp bl,118
+ 0000100C  74 1E	     1		je @F
+ 0000100E  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001010  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001015  6A 01	     2		push 1 ; iloœæ znaków
+ 00001017  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000101C  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001022  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00001027  80 C3 01	     1		add bl,1
+ 0000102A  EB DD	     1		jmp @B
+ 0000102C		     1	@@:
+				wyswietl pion,1
+ 0000102C  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 0000102E  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001033  6A 01	     1		push 1 ; iloœæ znaków
+ 00001035  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000103A  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001040  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00001045  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00001047  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000104C  6A 02	     1		push	2		        ; iloœæ znaków
+ 0000104E  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001053  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 00001059  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 0000105E  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001060  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001065  6A 01	     1		push 1 ; iloœæ znaków
+ 00001067  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000106C  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001072  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 00001077  B3 01	     1	mov bl,1
+ 00001079		     1	@@:
+ 00001079  80 FB 2B	     1		cmp bl,43
+ 0000107C  74 1E	     1		je @F
+ 0000107E  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001080  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001085  6A 01	     2		push 1 ; iloœæ znaków
+ 00001087  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000108C  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001092  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00001097  80 C3 01	     1		add bl,1
+ 0000109A  EB DD	     1		jmp @B
+ 0000109C		     1	@@:
+				plznaki  zadanieB, buf	; konwersja polskich znaków
+				wyswietl offset buf, rozmB ; tekst
+ 000010AB  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000010AD  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000010B2  FF 35 000001CD R  1		push rozmB ; iloœæ znaków
+ 000010B8  68 00000638 R     1		push offset offset buf ; wska¿nik na tekst w buforze
+ 000010BD  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000010C3  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 000010C8  B3 01	     1	mov bl,1
+ 000010CA		     1	@@:
+ 000010CA  80 FB 2B	     1		cmp bl,43
+ 000010CD  74 1E	     1		je @F
+ 000010CF  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000010D1  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000010D6  6A 01	     2		push 1 ; iloœæ znaków
+ 000010D8  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000010DD  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000010E3  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000010E8  80 C3 01	     1		add bl,1
+ 000010EB  EB DD	     1		jmp @B
+ 000010ED		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 000010ED  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000010EF  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000010F4  6A 01	     1		push 1 ; iloœæ znaków
+ 000010F6  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000010FB  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001101  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 	; makro
+ 00001106  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00001108  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000110D  6A 02	     1		push	2		        ; iloœæ znaków
+ 0000110F  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001114  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000111A  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 0000111F  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001121  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001126  6A 01	     1		push 1 ; iloœæ znaków
+ 00001128  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000112D  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001133  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00001138  B3 01	     1	mov bl,1
+ 0000113A		     1	@@:
+ 0000113A  80 FB 76	     1		cmp bl,118
+ 0000113D  74 1E	     1		je @F
+ 0000113F  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001141  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001146  6A 01	     2		push 1 ; iloœæ znaków
+ 00001148  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000114D  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001153  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00001158  80 C3 01	     1		add bl,1
+ 0000115B  EB DD	     1		jmp @B
+ 0000115D		     1	@@:
+				wyswietl pion,1
+ 0000115D  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 0000115F  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001164  6A 01	     1		push 1 ; iloœæ znaków
+ 00001166  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000116B  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001171  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 ; makro
+ 00001176  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00001178  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000117D  6A 02	     1		push	2		        ; iloœæ znaków
+ 0000117F  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001184  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000118A  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 0000118F  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001191  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001196  6A 01	     1		push 1 ; iloœæ znaków
+ 00001198  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000119D  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000011A3  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 000011A8  B3 01	     1	mov bl,1
+ 000011AA		     1	@@:
+ 000011AA  80 FB 2B	     1		cmp bl,43
+ 000011AD  74 1E	     1		je @F
+ 000011AF  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000011B1  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000011B6  6A 01	     2		push 1 ; iloœæ znaków
+ 000011B8  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000011BD  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000011C3  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000011C8  80 C3 01	     1		add bl,1
+ 000011CB  EB DD	     1		jmp @B
+ 000011CD		     1	@@:
+				plznaki zadanieC, buf	; konwersja polskich znaków
+				wyswietl offset buf, rozmC ; tekst
+ 000011DC  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000011DE  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000011E3  FF 35 000001F5 R  1		push rozmC ; iloœæ znaków
+ 000011E9  68 00000638 R     1		push offset offset buf ; wska¿nik na tekst w buforze
+ 000011EE  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000011F4  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 000011F9  B3 01	     1	mov bl,1
+ 000011FB		     1	@@:
+ 000011FB  80 FB 2B	     1		cmp bl,43
+ 000011FE  74 1E	     1		je @F
+ 00001200  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001202  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001207  6A 01	     2		push 1 ; iloœæ znaków
+ 00001209  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000120E  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001214  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00001219  80 C3 01	     1		add bl,1
+ 0000121C  EB DD	     1		jmp @B
+ 0000121E		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 0000121E  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001220  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001225  6A 01	     1		push 1 ; iloœæ znaków
+ 00001227  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000122C  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001232  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2 	; makro
+ 00001237  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 00001239  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000123E  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001240  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001245  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000124B  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00001250  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001252  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001257  6A 01	     1		push 1 ; iloœæ znaków
+ 00001259  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000125E  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001264  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 00001269  B3 01	     1	mov bl,1
+ 0000126B		     1	@@:
+ 0000126B  80 FB 76	     1		cmp bl,118
+ 0000126E  74 1E	     1		je @F
+ 00001270  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001272  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001277  6A 01	     2		push 1 ; iloœæ znaków
+ 00001279  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000127E  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001284  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 00001289  80 C3 01	     1		add bl,1
+ 0000128C  EB DD	     1		jmp @B
+ 0000128E		     1	@@:
+				wyswietl pion,1
+ 0000128E  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001290  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001295  6A 01	     1		push 1 ; iloœæ znaków
+ 00001297  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000129C  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000012A2  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 000012A7  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000012A9  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000012AE  6A 02	     1		push	2		        ; iloœæ znaków
+ 000012B0  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000012B5  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000012BB  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	
+ 000012C0  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000012C2  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000012C7  6A 01	     1		push 1 ; iloœæ znaków
+ 000012C9  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000012CE  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000012D4  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 38 ;	; wyœwietlenie pionowej linii
+ 000012D9  B3 01	     1	mov bl,1
+ 000012DB		     1	@@:
+ 000012DB  80 FB 26	     1		cmp bl,38
+ 000012DE  74 1E	     1		je @F
+ 000012E0  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000012E2  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000012E7  6A 01	     2		push 1 ; iloœæ znaków
+ 000012E9  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000012EE  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000012F4  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000012F9  80 C3 01	     1		add bl,1
+ 000012FC  EB DD	     1		jmp @B
+ 000012FE		     1	@@:
+				plznaki zakonczenie, zakonczenie	; konwersja polskich znaków
+				wyswietl offset zakonczenie, zakR	; tekst
+ 0000130D  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 0000130F  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001314  FF 35 00000228 R  1		push zakR ; iloœæ znaków
+ 0000131A  68 000001FC R     1		push offset offset zakonczenie ; wska¿nik na tekst w buforze
+ 0000131F  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001325  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 37 
+ 0000132A  B3 01	     1	mov bl,1
+ 0000132C		     1	@@:
+ 0000132C  80 FB 25	     1		cmp bl,37
+ 0000132F  74 1E	     1		je @F
+ 00001331  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001333  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001338  6A 01	     2		push 1 ; iloœæ znaków
+ 0000133A  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000133F  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001345  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000134A  80 C3 01	     1		add bl,1
+ 0000134D  EB DD	     1		jmp @B
+ 0000134F		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 0000134F  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001351  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001356  6A 01	     1		push 1 ; iloœæ znaków
+ 00001358  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000135D  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001363  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00001368  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000136A  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 0000136F  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001371  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001376  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000137C  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00001381  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001383  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001388  6A 01	     1		push 1 ; iloœæ znaków
+ 0000138A  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000138F  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001395  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 0000139A  B3 01	     1	mov bl,1
+ 0000139C		     1	@@:
+ 0000139C  80 FB 76	     1		cmp bl,118
+ 0000139F  74 1E	     1		je @F
+ 000013A1  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000013A3  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000013A8  6A 01	     2		push 1 ; iloœæ znaków
+ 000013AA  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000013AF  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000013B5  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000013BA  80 C3 01	     1		add bl,1
+ 000013BD  EB DD	     1		jmp @B
+ 000013BF		     1	@@:
+				wyswietl pion,1
+ 000013BF  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000013C1  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000013C6  6A 01	     1		push 1 ; iloœæ znaków
+ 000013C8  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000013CD  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000013D3  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 000013D8  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000013DA  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000013DF  6A 02	     1		push	2		        ; iloœæ znaków
+ 000013E1  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000013E6  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000013EC  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	
+ 000013F1  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000013F3  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000013F8  6A 01	     1		push 1 ; iloœæ znaków
+ 000013FA  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000013FF  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001405  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 49 ;	; wyœwietlenie pionowej linii
+ 0000140A  B3 01	     1	mov bl,1
+ 0000140C		     1	@@:
+ 0000140C  80 FB 31	     1		cmp bl,49
+ 0000140F  74 1E	     1		je @F
+ 00001411  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001413  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001418  6A 01	     2		push 1 ; iloœæ znaków
+ 0000141A  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 0000141F  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001425  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000142A  80 C3 01	     1		add bl,1
+ 0000142D  EB DD	     1		jmp @B
+ 0000142F		     1	@@:
+				plznaki wybrany, wybrany	; konwersja polskich znaków
+				wyswietl offset wybrany, wybrR	; tekst
+ 0000143E  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001440  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001445  FF 35 00000243 R  1		push wybrR ; iloœæ znaków
+ 0000144B  68 0000022C R     1		push offset offset wybrany ; wska¿nik na tekst w buforze
+ 00001450  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001456  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 47 
+ 0000145B  B3 01	     1	mov bl,1
+ 0000145D		     1	@@:
+ 0000145D  80 FB 2F	     1		cmp bl,47
+ 00001460  74 1E	     1		je @F
+ 00001462  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001464  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001469  6A 01	     2		push 1 ; iloœæ znaków
+ 0000146B  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00001470  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001476  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000147B  80 C3 01	     1		add bl,1
+ 0000147E  EB DD	     1		jmp @B
+ 00001480		     1	@@:
+				wyswietl pion,1		; wyœwietlenie pionowej linii
+ 00001480  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001482  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001487  6A 01	     1		push 1 ; iloœæ znaków
+ 00001489  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000148E  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001494  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00001499  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000149B  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000014A0  6A 02	     1		push	2		        ; iloœæ znaków
+ 000014A2  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000014A7  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000014AD  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 000014B2  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000014B4  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000014B9  6A 01	     1		push 1 ; iloœæ znaków
+ 000014BB  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000014C0  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000014C6  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 000014CB  B3 01	     1	mov bl,1
+ 000014CD		     1	@@:
+ 000014CD  80 FB 76	     1		cmp bl,118
+ 000014D0  74 1E	     1		je @F
+ 000014D2  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000014D4  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000014D9  6A 01	     2		push 1 ; iloœæ znaków
+ 000014DB  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000014E0  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000014E6  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000014EB  80 C3 01	     1		add bl,1
+ 000014EE  EB DD	     1		jmp @B
+ 000014F0		     1	@@:
+				wyswietl pion,1
+ 000014F0  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000014F2  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000014F7  6A 01	     1		push 1 ; iloœæ znaków
+ 000014F9  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000014FE  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001504  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00001509  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000150B  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00001510  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001512  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001517  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000151D  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1
+ 00001522  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001524  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001529  6A 01	     1		push 1 ; iloœæ znaków
+ 0000152B  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00001530  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001536  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 118 ; wyswietla przyjety znak 118 razy
+ 0000153B  B3 01	     1	mov bl,1
+ 0000153D		     1	@@:
+ 0000153D  80 FB 76	     1		cmp bl,118
+ 00001540  74 1E	     1		je @F
+ 00001542  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001544  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001549  6A 01	     2		push 1 ; iloœæ znaków
+ 0000154B  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00001550  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001556  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000155B  80 C3 01	     1		add bl,1
+ 0000155E  EB DD	     1		jmp @B
+ 00001560		     1	@@:
+				wyswietl pion,1
+ 00001560  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001562  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001567  6A 01	     1		push 1 ; iloœæ znaków
+ 00001569  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000156E  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001574  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 00001579  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000157B  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00001580  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001582  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001587  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000158D  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	
+ 00001592  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001594  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001599  6A 01	     1		push 1 ; iloœæ znaków
+ 0000159B  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000015A0  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000015A6  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 45 ;	; wyœwietlenie pionowej linii
+ 000015AB  B3 01	     1	mov bl,1
+ 000015AD		     1	@@:
+ 000015AD  80 FB 2D	     1		cmp bl,45
+ 000015B0  74 1E	     1		je @F
+ 000015B2  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000015B4  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000015B9  6A 01	     2		push 1 ; iloœæ znaków
+ 000015BB  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000015C0  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000015C6  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000015CB  80 C3 01	     1		add bl,1
+ 000015CE  EB DD	     1		jmp @B
+ 000015D0		     1	@@:
+				plznaki student, student	; konwersja polskich znaków
+				wyswietl offset student, stuR	; tekst
+ 000015DF  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000015E1  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000015E6  FF 35 00000267 R  1		push stuR ; iloœæ znaków
+ 000015EC  68 00000248 R     1		push offset offset student ; wska¿nik na tekst w buforze
+ 000015F1  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000015F7  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 43 
+ 000015FC  B3 01	     1	mov bl,1
+ 000015FE		     1	@@:
+ 000015FE  80 FB 2B	     1		cmp bl,43
+ 00001601  74 1E	     1		je @F
+ 00001603  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001605  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000160A  6A 01	     2		push 1 ; iloœæ znaków
+ 0000160C  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00001611  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001617  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000161C  80 C3 01	     1		add bl,1
+ 0000161F  EB DD	     1		jmp @B
+ 00001621		     1	@@:
+				wyswietl pion,1
+ 00001621  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001623  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001628  6A 01	     1		push 1 ; iloœæ znaków
+ 0000162A  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 0000162F  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001635  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 0000163A  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000163C  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00001641  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001643  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001648  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000164E  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pionL,1
+ 00001653  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001655  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000165A  6A 01	     1		push 1 ; iloœæ znaków
+ 0000165C  68 00000A56 R     1		push offset pionL ; wska¿nik na tekst w buforze
+ 00001661  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001667  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak prosta, 118 ; wyswietla przyjety znak 118 razy
+ 0000166C  B3 01	     1	mov bl,1
+ 0000166E		     1	@@:
+ 0000166E  80 FB 76	     1		cmp bl,118
+ 00001671  74 1E	     1		je @F
+ 00001673  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001675  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000167A  6A 01	     2		push 1 ; iloœæ znaków
+ 0000167C  68 00000A54 R     2		push offset prosta ; wska¿nik na tekst w buforze
+ 00001681  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001687  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000168C  80 C3 01	     1		add bl,1
+ 0000168F  EB DD	     1		jmp @B
+ 00001691		     1	@@:
+				wyswietl pionP,1
+ 00001691  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001693  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001698  6A 01	     1		push 1 ; iloœæ znaków
+ 0000169A  68 00000A57 R     1		push offset pionP ; wska¿nik na tekst w buforze
+ 0000169F  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000016A5  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 000016AA  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000016AC  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000016B1  6A 02	     1		push	2		        ; iloœæ znaków
+ 000016B3  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000016B8  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000016BE  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl pion,1	
+ 000016C3  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000016C5  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000016CA  6A 01	     1		push 1 ; iloœæ znaków
+ 000016CC  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 000016D1  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000016D7  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 34 ;	; wyœwietlenie pionowej linii
+ 000016DC  B3 01	     1	mov bl,1
+ 000016DE		     1	@@:
+ 000016DE  80 FB 22	     1		cmp bl,34
+ 000016E1  74 1E	     1		je @F
+ 000016E3  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000016E5  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000016EA  6A 01	     2		push 1 ; iloœæ znaków
+ 000016EC  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 000016F1  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000016F7  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000016FC  80 C3 01	     1		add bl,1
+ 000016FF  EB DD	     1		jmp @B
+ 00001701		     1	@@:
+				plznaki profesor, profesor	; konwersja polskich znaków
+				wyswietl offset profesor, proR	; tekst
+ 00001710  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001712  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001717  FF 35 000002A0 R  1		push proR ; iloœæ znaków
+ 0000171D  68 0000026C R     1		push offset offset profesor ; wska¿nik na tekst w buforze
+ 00001722  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001728  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak spacja, 33 
+ 0000172D  B3 01	     1	mov bl,1
+ 0000172F		     1	@@:
+ 0000172F  80 FB 21	     1		cmp bl,33
+ 00001732  74 1E	     1		je @F
+ 00001734  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 00001736  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000173B  6A 01	     2		push 1 ; iloœæ znaków
+ 0000173D  68 00000A5A R     2		push offset spacja ; wska¿nik na tekst w buforze
+ 00001742  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 00001748  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 0000174D  80 C3 01	     1		add bl,1
+ 00001750  EB DD	     1		jmp @B
+ 00001752		     1	@@:
+				wyswietl pion,1
+ 00001752  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001754  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 00001759  6A 01	     1		push 1 ; iloœæ znaków
+ 0000175B  68 00000A55 R     1		push offset pion ; wska¿nik na tekst w buforze
+ 00001760  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001766  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl, 2
+ 0000176B  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 0000176D  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 00001772  6A 02	     1		push	2		        ; iloœæ znaków
+ 00001774  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 00001779  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 0000177F  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+				wyswietl rogDL,1	; wyswietlenie leweg dolnego rogu tabelki
+ 00001784  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 00001786  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 0000178B  6A 01	     1		push 1 ; iloœæ znaków
+ 0000178D  68 00000A58 R     1		push offset rogDL ; wska¿nik na tekst w buforze
+ 00001792  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 00001798  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				drukujZnak prosta, 118 ; wyswietla przyjety znak 118 razy
+ 0000179D  B3 01	     1	mov bl,1
+ 0000179F		     1	@@:
+ 0000179F  80 FB 76	     1		cmp bl,118
+ 000017A2  74 1E	     1		je @F
+ 000017A4  6A 00	     2		push 0 ; rezerwa, musi byæ zero
+ 000017A6  68 00000008 R     2		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000017AB  6A 01	     2		push 1 ; iloœæ znaków
+ 000017AD  68 00000A54 R     2		push offset prosta ; wska¿nik na tekst w buforze
+ 000017B2  FF 35 00000000 R  2		push hout ; deskryptor buforu konsoli
+ 000017B8  E8 00000000 E     2		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+ 000017BD  80 C3 01	     1		add bl,1
+ 000017C0  EB DD	     1		jmp @B
+ 000017C2		     1	@@:
+				wyswietl rogDP,1	; wyswietlenie prawego dolnego rogu tabelki
+ 000017C2  6A 00	     1		push 0 ; rezerwa, musi byæ zero
+ 000017C4  68 00000008 R     1		push offset rout ;wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków
+ 000017C9  6A 01	     1		push 1 ; iloœæ znaków
+ 000017CB  68 00000A59 R     1		push offset rogDP ; wska¿nik na tekst w buforze
+ 000017D0  FF 35 00000000 R  1		push hout ; deskryptor buforu konsoli
+ 000017D6  E8 00000000 E     1		call WriteConsoleA ; wywo³anie funkcji WriteConsoleA
+				nowalinia nl,2
+ 000017DB  6A 00	     1		push	0		        ; rezerwa, musi byæ zero
+ 000017DD  68 00000008 R     1		push	offset rout     ; wskaŸnik na faktyczn¹ iloœæ wyprowadzonych znaków 
+ 000017E2  6A 02	     1		push	2		        ; iloœæ znaków
+ 000017E4  68 00000A48 R     1		push	offset nl 	; wska¿nik na tekst
+ 000017E9  FF 35 00000000 R  1		push	hout		    ; deskryptor buforu konsoli
+ 000017EF  E8 00000000 E     1		call	WriteConsoleA	; wywo³anie funkcji WriteConsoleA
+ 000017F4  C3			ret					; powrót do miejsca wywo³ania podprogramu
+ 000017F5			Menu endp
+ 000017F5			_text ends
+				end start
+				;----------------------------------------|
+				;    Koniec segmentu kodu                |
+				;----------------------------------------|
+Microsoft (R) Macro Assembler Version 6.14.8444		    05/28/20 02:30:37
+.\cw8\cw8.asm						     Symbols 2 - 1
+
+
+
+
+Macros:
+
+                N a m e                 Type
+
+Naglowek . . . . . . . . . . . .	Proc
+b_ramka  . . . . . . . . . . . .	Proc
+drukujZnak . . . . . . . . . . .	Proc
+m_linia  . . . . . . . . . . . .	Proc
+nowalinia  . . . . . . . . . . .	Proc
+plznaki  . . . . . . . . . . . .	Proc
+podajdeskr . . . . . . . . . . .	Proc
+wyswietl . . . . . . . . . . . .	Proc
+zadA . . . . . . . . . . . . . .	Proc
+zadB . . . . . . . . . . . . . .	Proc
+
+
+Structures and Unions:
+
+                N a m e                  Size
+                                         Offset      Type
+
+FOCUS_EVENT_RECORD . . . . . . .	 00000004
+  bSetFocus  . . . . . . . . . .	 00000000	 DWord
+INPUT_RECORD . . . . . . . . . .	 00000014
+  EventType  . . . . . . . . . .	 00000000	 Word
+  two_byte_alignment . . . . . .	 00000002	 Word
+  KeyEvent . . . . . . . . . . .	 00000004	  00000010
+  MouseEvent . . . . . . . . . .	 00000004	  00000010
+  WindowBufferSizeEvent  . . . .	 00000004	 DWord
+  MenuEvent  . . . . . . . . . .	 00000004	 DWord
+  FocusEvent . . . . . . . . . .	 00000004	 DWord
+KEY_EVENT_RECORD . . . . . . . .	 00000010
+  bKeyDown . . . . . . . . . . .	 00000000	 DWord
+  wRepeatCount . . . . . . . . .	 00000004	 Word
+  wVirtualKeyCode  . . . . . . .	 00000006	 Word
+  wVirtualScanCode . . . . . . .	 00000008	 Word
+  UnicodeChar  . . . . . . . . .	 0000000A	 Word
+  AsciiChar  . . . . . . . . . .	 0000000A	 Byte
+  dwControlKeyState  . . . . . .	 0000000C	 DWord
+MENU_EVENT_RECORD  . . . . . . .	 00000004
+  dwCommandId  . . . . . . . . .	 00000000	 DWord
+MOUSE_EVENT_RECORD . . . . . . .	 00000010
+  dwMousePosition  . . . . . . .	 00000000	 DWord
+  dwButtonState  . . . . . . . .	 00000004	 DWord
+  dwControlKeyState  . . . . . .	 00000008	 DWord
+  dwEventFlags . . . . . . . . .	 0000000C	 DWord
+WINDOW_BUFFER_SIZE_RECORD  . . .	 00000004
+  dwSize . . . . . . . . . . . .	 00000000	 DWord
+coord  . . . . . . . . . . . . .	 00000004
+  X  . . . . . . . . . . . . . .	 00000000	 Word
+  Y  . . . . . . . . . . . . . .	 00000002	 Word
+
+
+Segments and Groups:
+
+                N a m e                 Size     Length   Align   Combine Class
+
+FLAT . . . . . . . . . . . . . .	GROUP
+_DATA  . . . . . . . . . . . . .	32 Bit	 00000BA0 Para	  Public  'DATA'	
+_TEXT  . . . . . . . . . . . . .	32 Bit	 000017F5 Para	  Public  'CODE'	
+
+
+Procedures,  parameters and locals:
+
+                N a m e                 Type     Value    Attr
+
+$$$00001 . . . . . . . . . . . .	P Near	 00000000 _TEXT	Length= 000006BD Private STDCALL
+  powt . . . . . . . . . . . . .	L Near	 0000009A _TEXT	
+  klaw . . . . . . . . . . . . .	L Near	 000000CA _TEXT	
+  zadanie_a  . . . . . . . . . .	L Near	 00000143 _TEXT	
+  etykA  . . . . . . . . . . . .	L Near	 00000234 _TEXT	
+  konA . . . . . . . . . . . . .	L Near	 00000236 _TEXT	
+  zadanie_b  . . . . . . . . . .	L Near	 00000240 _TEXT	
+  powtB  . . . . . . . . . . . .	L Near	 00000357 _TEXT	
+  klawB  . . . . . . . . . . . .	L Near	 00000398 _TEXT	
+  etykB  . . . . . . . . . . . .	L Near	 000003DB _TEXT	
+  klaw2B . . . . . . . . . . . .	L Near	 0000040B _TEXT	
+  konB . . . . . . . . . . . . .	L Near	 0000044E _TEXT	
+  zadanie_c  . . . . . . . . . .	L Near	 00000458 _TEXT	
+  powtC  . . . . . . . . . . . .	L Near	 0000056F _TEXT	
+  myszC  . . . . . . . . . . . .	L Near	 000005A7 _TEXT	
+  klawC  . . . . . . . . . . . .	L Near	 000005E3 _TEXT	
+  etykC  . . . . . . . . . . . .	L Near	 00000626 _TEXT	
+  klaw2C . . . . . . . . . . . .	L Near	 00000664 _TEXT	
+  konC . . . . . . . . . . . . .	L Near	 000006A7 _TEXT	
+  kon  . . . . . . . . . . . . .	L Near	 000006B1 _TEXT	
+AllocConsole . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+CharToOemA . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Cls  . . . . . . . . . . . . . .	P Near	 000006BD _TEXT	Length= 00000028 Public STDCALL
+ExitProcess  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FillConsoleOutputAttribute . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FlushConsoleInputBuffer  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+FreeConsole  . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetLargestConsoleWindowSize  . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+GetStdHandle . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+Menu . . . . . . . . . . . . . .	P Near	 000006E5 _TEXT	Length= 00001110 Public STDCALL
+ReadConsoleA . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+ReadConsoleInputA  . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleCursorPosition . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTextAttribute  . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+SetConsoleTitleA . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleA  . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+WriteConsoleOutputCharacterA . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+lstrlenA . . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External STDCALL
+wsprintfA  . . . . . . . . . . .	P Near	 00000000 FLAT	Length= 00000000 External C
+
+
+Symbols:
+
+                N a m e                 Type     Value    Attr
+
+@CodeSize  . . . . . . . . . . .	Number	 00000000h   
+@DataSize  . . . . . . . . . . .	Number	 00000000h   
+@Interface . . . . . . . . . . .	Number	 00000003h   
+@Model . . . . . . . . . . . . .	Number	 00000007h   
+@code  . . . . . . . . . . . . .	Text   	 _TEXT
+@data  . . . . . . . . . . . . .	Text   	 FLAT
+@fardata?  . . . . . . . . . . .	Text   	 FLAT
+@fardata . . . . . . . . . . . .	Text   	 FLAT
+@stack . . . . . . . . . . . . .	Text   	 FLAT
+CAPSLOCK_ON  . . . . . . . . . .	Number	 00000080h   
+DOUBLE_CLICK . . . . . . . . . .	Number	 00000002h   
+ENHANCED_KEY . . . . . . . . . .	Number	 00000100h   
+FOCUS_EVENT  . . . . . . . . . .	Number	 00000010h   
+FROM_LEFT_1ST_BUTTON_PRESSED . .	Number	 00000001h   
+FROM_LEFT_2ND_BUTTON_PRESSED . .	Number	 00000004h   
+FROM_LEFT_3ND_BUTTON_PRESSED . .	Number	 00000008h   
+FROM_LEFT_4ND_BUTTON_PRESSED . .	Number	 00000010h   
+KEY_EVENT  . . . . . . . . . . .	Number	 00000001h   
+LEFT_ALT_PRESSED . . . . . . . .	Number	 00000002h   
+LEFT_CTRL_PRESSED  . . . . . . .	Number	 00000008h   
+LeKlMyszyr . . . . . . . . . . .	DWord	 00000B99 _DATA	
+LeKlMyszy  . . . . . . . . . . .	Byte	 00000B7C _DATA	
+MENU_EVENT . . . . . . . . . . .	Number	 00000008h   
+MOUSE_EVENT  . . . . . . . . . .	Number	 00000002h   
+MOUSE_MOVED  . . . . . . . . . .	Number	 00000001h   
+MOUSE_WHEELED  . . . . . . . . .	Number	 00000004h   
+NUMLOCK_ON . . . . . . . . . . .	Number	 00000020h   
+RIGHTMOST_BUTTON_PRESSED . . . .	Number	 00000002h   
+RIGHT_ALT_PRESSED  . . . . . . .	Number	 00000001h   
+RIGHT_CTRL_PRESSED . . . . . . .	Number	 00000004h   
+SCROLLLOCK_ON  . . . . . . . . .	Number	 00000040h   
+SHIFT_PRESSED  . . . . . . . . .	Number	 00000010h   
+STD_INPUT_HANDLE . . . . . . . .	Number	 -0000000Ah   
+STD_OUTPUT_HANDLE  . . . . . . .	Number	 -0000000Bh   
+YX . . . . . . . . . . . . . . .	coord	 00000A77 _DATA	
+atryb1 . . . . . . . . . . . . .	DWord	 00000ADC _DATA	
+atryb  . . . . . . . . . . . . .	DWord	 00000AD8 _DATA	
+bialy  . . . . . . . . . . . . .	DWord	 00000AD0 _DATA	
+buff . . . . . . . . . . . . . .	Byte	 00000838 _DATA	
+bufor  . . . . . . . . . . . . .	Byte	 00000434 _DATA	
+buf  . . . . . . . . . . . . . .	Byte	 00000638 _DATA	
+czerwony . . . . . . . . . . . .	DWord	 00000AD4 _DATA	
+etykA  . . . . . . . . . . . . .	L Near	 00000234 _TEXT	
+etykB  . . . . . . . . . . . . .	L Near	 000003DB _TEXT	
+etykC  . . . . . . . . . . . . .	L Near	 00000626 _TEXT	
+hinp . . . . . . . . . . . . . .	DWord	 00000004 _DATA	
+hout . . . . . . . . . . . . . .	DWord	 00000000 _DATA	
+ile  . . . . . . . . . . . . . .	DWord	 00000A44 _DATA	
+klaw2B . . . . . . . . . . . . .	L Near	 0000040B _TEXT	
+klaw2C . . . . . . . . . . . . .	L Near	 00000664 _TEXT	
+klawB  . . . . . . . . . . . . .	L Near	 00000398 _TEXT	
+klawC  . . . . . . . . . . . . .	L Near	 000005E3 _TEXT	
+klaw . . . . . . . . . . . . . .	L Near	 000000CA _TEXT	
+kolor1 . . . . . . . . . . . . .	Number	 00000007h   
+kolor2 . . . . . . . . . . . . .	Number	 00000061h   
+kolorb . . . . . . . . . . . . .	Number	 00000011h   
+kolorc . . . . . . . . . . . . .	Number	 00000044h   
+kolorw . . . . . . . . . . . . .	Number	 000000FFh   
+konA . . . . . . . . . . . . . .	L Near	 00000236 _TEXT	
+konB . . . . . . . . . . . . . .	L Near	 0000044E _TEXT	
+konC . . . . . . . . . . . . . .	L Near	 000006A7 _TEXT	
+kon  . . . . . . . . . . . . . .	L Near	 000006B1 _TEXT	
+leng . . . . . . . . . . . . . .	DWord	 00000634 _DATA	
+licznik1 . . . . . . . . . . . .	Byte	 00000A5B _DATA	
+licznik2 . . . . . . . . . . . .	Byte	 00000A5D _DATA	
+mbuf . . . . . . . . . . . . . .	Number	 00000200h   
+menuR  . . . . . . . . . . . . .	DWord	 00000153 _DATA	
+menuTekst  . . . . . . . . . . .	Byte	 0000013C _DATA	
+myszC  . . . . . . . . . . . . .	L Near	 000005A7 _TEXT	
+naglow . . . . . . . . . . . . .	Byte	 00000157 _DATA	
+niebieski  . . . . . . . . . . .	DWord	 00000ACC _DATA	
+nl2  . . . . . . . . . . . . . .	Byte	 00000A4B _DATA	
+nl . . . . . . . . . . . . . . .	Byte	 00000A48 _DATA	
+nxt  . . . . . . . . . . . . . .	Byte	 00000A4F _DATA	
+nzdarz . . . . . . . . . . . . .	DWord	 00000A5F _DATA	
+pionL  . . . . . . . . . . . . .	Byte	 00000A56 _DATA	
+pionP  . . . . . . . . . . . . .	Byte	 00000A57 _DATA	
+pion . . . . . . . . . . . . . .	Byte	 00000A55 _DATA	
+powtB  . . . . . . . . . . . . .	L Near	 00000357 _TEXT	
+powtC  . . . . . . . . . . . . .	L Near	 0000056F _TEXT	
+powt . . . . . . . . . . . . . .	L Near	 0000009A _TEXT	
+proR . . . . . . . . . . . . . .	DWord	 000002A0 _DATA	
+profesor . . . . . . . . . . . .	Byte	 0000026C _DATA	
+prosta . . . . . . . . . . . . .	Byte	 00000A54 _DATA	
+rbuf . . . . . . . . . . . . . .	DWord	 00000A3C _DATA	
+rfakt  . . . . . . . . . . . . .	DWord	 00000A80 _DATA	
+rinp . . . . . . . . . . . . . .	DWord	 00000A40 _DATA	
+rkom . . . . . . . . . . . . . .	DWord	 00000A7C _DATA	
+rogDL  . . . . . . . . . . . . .	Byte	 00000A58 _DATA	
+rogDP  . . . . . . . . . . . . .	Byte	 00000A59 _DATA	
+rogGL  . . . . . . . . . . . . .	Byte	 00000A52 _DATA	
+rogGP  . . . . . . . . . . . . .	Byte	 00000A53 _DATA	
+rout . . . . . . . . . . . . . .	DWord	 00000008 _DATA	
+rozmA  . . . . . . . . . . . . .	DWord	 000001A5 _DATA	
+rozmB  . . . . . . . . . . . . .	DWord	 000001CD _DATA	
+rozmC  . . . . . . . . . . . . .	DWord	 000001F5 _DATA	
+rozmN  . . . . . . . . . . . . .	DWord	 00000180 _DATA	
+rozmT  . . . . . . . . . . . . .	DWord	 00000B0F _DATA	
+spacja . . . . . . . . . . . . .	Byte	 00000A5A _DATA	
+start  . . . . . . . . . . . . .	L Near	 00000000 _TEXT	Public STDCALL
+stuR . . . . . . . . . . . . . .	DWord	 00000267 _DATA	
+student  . . . . . . . . . . . .	Byte	 00000248 _DATA	
+symb . . . . . . . . . . . . . .	Byte	 00000A7B _DATA	
+sz1  . . . . . . . . . . . . . .	DWord	 00000029 _DATA	
+sz2  . . . . . . . . . . . . . .	DWord	 00000045 _DATA	
+sz3  . . . . . . . . . . . . . .	DWord	 00000076 _DATA	
+sz4  . . . . . . . . . . . . . .	DWord	 00000097 _DATA	
+sz5  . . . . . . . . . . . . . .	DWord	 000000A8 _DATA	
+sz6  . . . . . . . . . . . . . .	DWord	 000000E0 _DATA	
+szkola1  . . . . . . . . . . . .	Byte	 0000000C _DATA	
+szkola2  . . . . . . . . . . . .	Byte	 00000030 _DATA	
+szkola3  . . . . . . . . . . . .	Byte	 0000004C _DATA	
+szkola4  . . . . . . . . . . . .	Byte	 0000007C _DATA	
+szkola5  . . . . . . . . . . . .	Byte	 0000009C _DATA	
+szkola6  . . . . . . . . . . . .	Byte	 000000AC _DATA	
+tab  . . . . . . . . . . . . . .	DWord	 000002A4 _DATA	
+tekst  . . . . . . . . . . . . .	Byte	 00000AE0 _DATA	
+tytulA . . . . . . . . . . . . .	Byte	 00000108 _DATA	
+tytulrozm  . . . . . . . . . . .	DWord	 00000138 _DATA	
+tytulr . . . . . . . . . . . . .	DWord	 00000104 _DATA	
+tytul  . . . . . . . . . . . . .	Byte	 000000E4 _DATA	
+wierszB  . . . . . . . . . . . .	Byte	 00000A84 _DATA	
+wierszC  . . . . . . . . . . . .	Byte	 00000B14 _DATA	
+wierszrB . . . . . . . . . . . .	DWord	 00000AC8 _DATA	
+wierszrC . . . . . . . . . . . .	DWord	 00000B76 _DATA	
+wybrR  . . . . . . . . . . . . .	DWord	 00000243 _DATA	
+wybrany  . . . . . . . . . . . .	Byte	 0000022C _DATA	
+zadanieA . . . . . . . . . . . .	Byte	 00000184 _DATA	
+zadanieB . . . . . . . . . . . .	Byte	 000001AC _DATA	
+zadanieC . . . . . . . . . . . .	Byte	 000001D4 _DATA	
+zadanie_a  . . . . . . . . . . .	L Near	 00000143 _TEXT	
+zadanie_b  . . . . . . . . . . .	L Near	 00000240 _TEXT	
+zadanie_c  . . . . . . . . . . .	L Near	 00000458 _TEXT	
+zakR . . . . . . . . . . . . . .	DWord	 00000228 _DATA	
+zakonczenie  . . . . . . . . . .	Byte	 000001FC _DATA	
+zapis  . . . . . . . . . . . . .	INPUT_RECORD  00000A63 _DATA	
+zmMenu . . . . . . . . . . . . .	DWord	 00000A38 _DATA	
+
+	   0 Warnings
+	   0 Errors

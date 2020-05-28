@@ -1,0 +1,6 @@
+Ponieważ po uruchomieniu aplikacji okno szybko zniknie, dodać do programu cykl – opóźnienie:
+
+mov ECX, 07FFFFFFFh
+etyk: loop etyk ; opóźnienie zamknięcia okna
+
+8 -> H, I : Lewy Alt + lewy myszy
